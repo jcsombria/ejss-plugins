@@ -1,0 +1,56 @@
+<html>
+  <head>
+      <title>SoftwareLinks - ENLARGE element</title>
+      <link rel="stylesheet" type="text/css" href="style.css">
+  </head>
+  <body>
+    <h2>
+      <img src="./EnlargeElement.jpg"> SoftwareLinks-ENLARGE element
+    </h2>
+    <p>
+        A SoftwareLinks-ENLARGE element provides an implementation of ENLARGE communications to access any software or
+        device within an ENLARGE system.
+    </p>
+
+    <h3>Usage</h3>
+    <p>
+        To add a SoftwareLinks-ENLARGE element to your model, drag the icon element to the list of your model elements
+        and set the name of the variable for referring to the element.
+        The connection can be configured in the preferences window: the address of the ENLARGE server, the port to establish
+        the connection, the path (which you only need to change in case og myGateway devices) and, the experience id.
+        The "Secure connection" checkbox must be ticked if your ENLARGE server has an SSL certificate and you want c
+        ommunications to be secure.
+        ENLARGE user and password fields may be filled with your ENLARGE user data. If left blank, the application will
+        show an emergent message asking for the user credentials when it is run.
+    </p>
+    <p>
+        The ENLARGE element provides an api to communicate with ENLARGE systems for accessing protected resources. The methods
+        are categorized by functionality:
+        Connection control:
+          <ul>
+            <li> <i>connect()</i> Creates a new connection with ENLARGE.</li>
+          </ul>
+        Session control:
+          <ul>
+            <li> <i>setTimeout(time)</i> Specify the time for which communications will be enabled. Variable time is
+                measured in minutes</li>
+            <li> <i>setSarlabCredentials(jsonCredentials)</i> Credentials in JSON format, either {'user':username,
+                'password':password} or {'key':keyvalue}. If configured in the element preferences window, this method
+                does not need to be called.</li>
+          </ul>
+    </p>
+
+    <h3>Example of use</h3>
+    <p>    
+        The following code is usually included into an initialization page, and it must be executed to set up the
+        connection:
+    </p>
+    <pre>
+        enlarge.setTimeout(10);
+        enlarge.connect();
+    </pre>
+  <p>
+      More info about ENLARGE here: <a href="http://enlargeirs.dia.uned.es/">http://enlargeirs.dia.uned.es/</a>
+  </p>
+  </body>
+</html>
