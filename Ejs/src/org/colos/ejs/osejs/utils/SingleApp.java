@@ -115,28 +115,11 @@ public class SingleApp {
       return;
     }
     
-    // Create packing according to Ionic version
-    String IonicTemplateDirectory;
-    if(optionsInfo.getFramework() == SingleAppDialog.IONIC_V1) {
-      // www->model_pages
-      //    ->js
-      //    ->img
-      //    ->css
-      //    ->other_pages
-      IonicTemplateDirectory = "javascript/SINGLE_APP/IONIC1/";
-    } else { // Ionic v2
-      // www->model_pages
-      //    ->js
-      //    ->img
-      //    ->css
-      // src->app
-      //    ->pages->about
-      //           ->home
-      IonicTemplateDirectory = "javascript/SINGLE_APP/IONIC2/";            
-    }
+    // Create packing according to Ionic version 4
+    String IonicTemplateDirectory = "javascript/SINGLE_APP/IONIC4/";
 
     // directory www->model_pages
-    File pagesFolder = new File(zipFolder,"www/model_pages");
+    File pagesFolder = new File(zipFolder,"src/assets/model_pages");
     pagesFolder.mkdirs();
 
     { // generate the simulation from EjsS
@@ -160,33 +143,25 @@ public class SingleApp {
     { // Copy standard App files from Ionic template directory
       File javascriptDir = new File(_ejs.getBinDirectory(),IonicTemplateDirectory);
       String [] copyList = {
-          "www/img/Gyroscope.png",  "www/img/ReaderFree.png", "www/img/ReaderInterface.png", 
-          "www/img/ReaderPro.png", "www/js/common_script.js" };
+          "src/assets/img/Gyroscope.png",  "src/assets/img/ReaderFree.png", "src/assets/img/ReaderInterface.png", 
+          "src/assets/img/ReaderPro.png", "src/assets/js/common_script.js" };
       for (String copyName : copyList) 
         if (!FileUtils.copy(new File (javascriptDir,copyName), new File(zipFolder,copyName))) 
           System.err.println(res.getString("Osejs.File.SavingError")+"\n"+copyName);
 
       // Copy specific App template files from Ionic template directory
-      String [] copyTemplateDirs = {};
-      if(optionsInfo.getFramework() == SingleAppDialog.IONIC_V1) {
-        copyTemplateDirs = new String[] { "www" };
-      } else { // Ionic v2
-        copyTemplateDirs = new String[] { "src" };        
-      }
+      String [] copyTemplateDirs = new String[] { "src" };        
       String templateDir = "";
       switch(optionsInfo.getTemplate()) {
         case SingleAppDialog.TEMPLATE_SIDE:
           templateDir = "SIDE/";
           break;
-        case SingleAppDialog.TEMPLATE_SLIDES:
-          templateDir = "SLIDES/";
-          break;
         case SingleAppDialog.TEMPLATE_TABS:
           templateDir = "TABS/";
           break;
         default:
-        case SingleAppDialog.TEMPLATE_CARD:
-          templateDir = "CARD/";
+        case SingleAppDialog.TEMPLATE_FULL:
+          templateDir = "FULL/";
           break;
       }
       for (String copyName : copyTemplateDirs) 
@@ -196,21 +171,21 @@ public class SingleApp {
     { // Copy CSS files
       File userLibraryCSS = new File(_ejs.getConfigDirectory(),OsejsCommon.EJS_LIBRARY_DIR_PATH+"/css/ejss.css");
       if (userLibraryCSS.exists()) {
-        if (!FileUtils.copy(userLibraryCSS, new File(zipFolder,"www/css/ejss.css"))) 
+        if (!FileUtils.copy(userLibraryCSS, new File(zipFolder,"src/assets/css/ejss.css"))) 
           System.err.println(res.getString("Osejs.File.SavingError")+"\n"+userLibraryCSS.getAbsolutePath());             
       }
       else {
         File libraryCSS = new File(_ejs.getBinDirectory(),OsejsCommon.CONFIG_DIR_PATH+"/"+OsejsCommon.EJS_LIBRARY_DIR_PATH+"/css/ejss.css");
         if (libraryCSS.exists()) {
-          if (!FileUtils.copy(libraryCSS, new File(zipFolder,"www/css/ejss.css"))) 
+          if (!FileUtils.copy(libraryCSS, new File(zipFolder,"src/assets/css/ejss.css"))) 
             System.err.println(res.getString("Osejs.File.SavingError")+"\n"+libraryCSS.getAbsolutePath());             
         } 
       }
     }
     { // Copy javascript files
       ArrayList<TwoStrings> jsFiles = new ArrayList<TwoStrings>();
-      jsFiles.add(new TwoStrings("scripts/textresizedetector.js","www/js/textresizedetector.js")); 
-      jsFiles.add(new TwoStrings(JSObfuscator.LIB_MIN_FILENAME,  "www/js/"+JSObfuscator.LIB_MIN_FILENAME));
+      jsFiles.add(new TwoStrings("scripts/textresizedetector.js","src/assets/js/textresizedetector.js")); 
+      jsFiles.add(new TwoStrings(JSObfuscator.LIB_MIN_FILENAME,  "src/assets/js/"+JSObfuscator.LIB_MIN_FILENAME));
 
       File javascriptLibDir = new File(_ejs.getBinDirectory(),"javascript/lib");
       for (TwoStrings ts : jsFiles) {
@@ -315,12 +290,12 @@ public class SingleApp {
           if (content.indexOf("<Module>")>0 && content.indexOf("<ModulePrefs")>0) mustDelete = true;
         }
         else if (filename.endsWith(commonScriptFilename)) { // replace common script with the common script needed
-          EPub.combineCommonScript(file, new File(zipFolder,"www/js/common_script.js"), filename, modelTitle);
+          EPub.combineCommonScript(file, new File(zipFolder,"src/assets/js/common_script.js"), filename, modelTitle);
           //JarTool.copy(file, new File(zipFolder,"js/common_script.js"));
           mustDelete = true;
         }
         else if (filename.equals("_ejs_library/css/ejss.css")) { // replace system CSS with user defined CSS
-          if (!FileUtils.copy(file, new File(zipFolder,"www/css/ejss.css"))) 
+          if (!FileUtils.copy(file, new File(zipFolder,"src/assets/css/ejss.css"))) 
             System.err.println(res.getString("Osejs.File.SavingError")+"\n"+file.getAbsolutePath());             
           mustDelete = true;
         }
@@ -421,7 +396,7 @@ public class SingleApp {
     buffer.append("var about_authorInfo = \"");    
     for (TwoStrings ts : _authorInfo) {
       buffer.append("<p>");
-      if (ts.getSecondString()!=null) buffer.append("<img src='model_pages/"+ts.getSecondString()+"' alt='Photo of "+ts.getFirstString()+"' /> ");
+      if (ts.getSecondString()!=null) buffer.append("<img src='assets/model_pages/"+ts.getSecondString()+"' alt='Photo of "+ts.getFirstString()+"' /> ");
       buffer.append(ts.getFirstString()+"</p>");
     }
     buffer.append("\";\n");
@@ -431,7 +406,6 @@ public class SingleApp {
     buffer.append("var app_menu_title = \""+res.getString("Package.Contents")+"\";\n");
     buffer.append("var app_simulation_first = "+_options.isSimulationFirst()+";\n");
     buffer.append("var app_simulation_index = "+_simulationIndex+";\n");
-    buffer.append("var app_full_screen = "+_options.isFullScreen()+";\n");
     buffer.append("var app_locking = "+_options.getLocking()+";\n");
     
     buffer.append("\n");
@@ -442,7 +416,7 @@ public class SingleApp {
       else buffer.append(",\n");
       buffer.append("  {\n");
       buffer.append("    title: \""+page.getFirstString()+"\",\n");
-      buffer.append("    url: \"model_pages/"+page.getSecondString()+"\",\n");
+      buffer.append("    url: \"assets/model_pages/"+page.getSecondString()+"\",\n");
       buffer.append("    type: \"model_page\"\n");
       buffer.append("  }");
       counter++;
@@ -450,12 +424,12 @@ public class SingleApp {
     buffer.append(",\n");
     buffer.append("  {\n");
     buffer.append("    title: \""+res.getString("Package.About")+"\",\n");
-    buffer.append("    url: \"other_pages/about.html\",\n");
+    buffer.append("    url: \"assets/other_pages/about.html\",\n");
     buffer.append("    type: \"other_page\"\n");
     buffer.append("  }");    
     buffer.append("\n];\n");
 
-    File outputFile = new File (_workingFolder,"www/js/pages.js");
+    File outputFile = new File (_workingFolder,"src/assets/js/pages.js");
     try {
       FileUtils.saveToFile(outputFile, OsejsCommon.getUTF8(), buffer.toString());
     }

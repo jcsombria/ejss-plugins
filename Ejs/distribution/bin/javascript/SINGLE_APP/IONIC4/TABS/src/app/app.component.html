@@ -1,0 +1,17 @@
+<ion-app>
+  <ion-router-outlet></ion-router-outlet>
+
+  <ion-tabs>
+
+    <ion-tab-bar slot="bottom">
+  
+      <ion-tab-button *ngFor="let entry of tabs; let i=index" [routerDirection]="'root'" [routerLink]="selectPage(i)">
+        <ion-icon [name]="entry.icon"></ion-icon>
+        <ion-label>{{entry.title}}</ion-label>
+      </ion-tab-button>
+
+    </ion-tab-bar>
+  
+  </ion-tabs>
+  
+</ion-app>

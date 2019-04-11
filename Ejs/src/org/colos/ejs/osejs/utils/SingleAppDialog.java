@@ -26,23 +26,14 @@ public class SingleAppDialog {
 
   static public final int TEMPLATE_SIDE = 0;
   static public final int TEMPLATE_TABS = 1;
-  static public final int TEMPLATE_SLIDES = 2;
-  static public final int TEMPLATE_CARD = 3;
-
-  static public final int IONIC_V1 = 0;
-  static public final int IONIC_V2 = 1;
+  static public final int TEMPLATE_FULL = 2;
   
   static public class SingleAppOptions {
-    private int framework = IONIC_V2;
     private int template = TEMPLATE_SIDE;
-    private boolean fullScreen = false;
     private boolean simulationFirst = false;
     private int locking = LOCK_NOTHING;
-//    boolean noCoverPage = false;
 
-    public int getFramework() { return framework; }
     public int getTemplate() { return template; }
-    public boolean isFullScreen() { return fullScreen; }
     public boolean isSimulationFirst() { return simulationFirst; } 
     public int getLocking() { return locking; }
   }
@@ -55,31 +46,6 @@ public class SingleAppDialog {
     final ReturnValue returnValue=new ReturnValue();
     final JDialog dialog=new JDialog();
 
-    //--------------- Choose Framework
-    
-    JLabel frameworkLabel = new JLabel(res.getString("Package.App.Framework"),SwingConstants.LEFT);
-//    frameworkLabel.setFont(frameworkLabel.getFont().deriveFont(Font.BOLD));
-
-    JRadioButton ionic1RB = new JRadioButton (res.getString("Package.App.Ionic1"),false);
-    ionic1RB.setRequestFocusEnabled(false);
-    
-    JRadioButton ionic2RB = new JRadioButton (res.getString("Package.App.Ionic2"),true);
-    ionic2RB.setRequestFocusEnabled(false);
-
-    ButtonGroup frameworkGroup = new ButtonGroup();
-    frameworkGroup.add(ionic1RB);
-    frameworkGroup.add(ionic2RB);
-
-    FlowLayout frameworkFlow = new FlowLayout(FlowLayout.CENTER);
-    frameworkFlow.setVgap(0);
-    JPanel frameworkOptionsPanel = new JPanel (frameworkFlow);
-    frameworkOptionsPanel.add(ionic2RB);
-    frameworkOptionsPanel.add(ionic1RB);
-
-    JPanel frameworkPanel = new JPanel (new BorderLayout());
-    frameworkPanel.add (frameworkLabel,BorderLayout.NORTH);
-    frameworkPanel.add (frameworkOptionsPanel,BorderLayout.CENTER);    
-    
     // --------------- Choose template
     
     JLabel templateLabel = new JLabel(res.getString("Package.App.Template"),SwingConstants.LEFT);
@@ -89,22 +55,18 @@ public class SingleAppDialog {
     sideTemplateRB.setRequestFocusEnabled(false);
     JRadioButton tabsTemplateRB = new JRadioButton (res.getString("Package.App.TabsTemplate"),false);
     tabsTemplateRB.setRequestFocusEnabled(false);
-    JRadioButton slidesTemplateRB = new JRadioButton (res.getString("Package.App.SlidesTemplate"),false);
-    slidesTemplateRB.setRequestFocusEnabled(false);
-    JRadioButton cardTemplateRB = new JRadioButton (res.getString("Package.App.CardTemplate"),false);
-    cardTemplateRB.setRequestFocusEnabled(false);
+    JRadioButton fullTemplateRB = new JRadioButton (res.getString("Package.App.FullTemplate"),false);
+    fullTemplateRB.setRequestFocusEnabled(false);
     
     ButtonGroup templateGroup = new ButtonGroup();
     templateGroup.add(sideTemplateRB);
     templateGroup.add(tabsTemplateRB);
-    templateGroup.add(slidesTemplateRB);
-    templateGroup.add(cardTemplateRB);
+    templateGroup.add(fullTemplateRB);
 
     JPanel templateOptionsPanel = new JPanel (new GridLayout(2,2)); // FlowLayout(FlowLayout.CENTER)); // GridLayout(1,0));
     templateOptionsPanel.add(sideTemplateRB);
     templateOptionsPanel.add(tabsTemplateRB);
-    templateOptionsPanel.add(slidesTemplateRB);
-    templateOptionsPanel.add(cardTemplateRB);
+    templateOptionsPanel.add(fullTemplateRB);
     
     JPanel templateCenterPanel = new JPanel (new FlowLayout(FlowLayout.CENTER));
     templateCenterPanel.add(templateOptionsPanel);
@@ -145,15 +107,11 @@ public class SingleAppDialog {
 
     // --------------- Features checkboxes
     
-    JCheckBox fullScreenCB = new JCheckBox (res.getString("Package.App.FullScreen"),false);
-    fullScreenCB.setRequestFocusEnabled(false);
-
     JCheckBox simulationFirstCB = new JCheckBox (res.getString("Package.App.SimulationFirst"),false);
     simulationFirstCB.setRequestFocusEnabled(false);
 
     JPanel otherPanel=new JPanel (new java.awt.GridLayout(0,1));
     otherPanel.setBorder(new EmptyBorder(10,5,5,0));
-    otherPanel.add(fullScreenCB);
     otherPanel.add(simulationFirstCB);
 
 //    JLabel featuresLabel = new JLabel(res.getString("Package.App.OtherProperties"));
@@ -183,7 +141,6 @@ public class SingleAppDialog {
     
     Box optionsBox = Box.createVerticalBox();
     optionsBox.setBorder(new EmptyBorder(10,10,2,10));
-    optionsBox.add(frameworkPanel);
     optionsBox.add(templatePanel);
     optionsBox.add(lockPanel);
     optionsBox.add(otherPanel);
@@ -208,15 +165,11 @@ public class SingleAppDialog {
     if (!returnValue.value) return null;
 
     SingleAppOptions info = new SingleAppOptions();
-    if (ionic1RB.isSelected()) info.framework = IONIC_V1;
-    else                       info.framework = IONIC_V2;                              
     // template
     if      (sideTemplateRB.isSelected())    info.template = TEMPLATE_SIDE;
     else if (tabsTemplateRB.isSelected())    info.template = TEMPLATE_TABS;
-    else if (slidesTemplateRB.isSelected())  info.template = TEMPLATE_SLIDES;
-    else                                      info.template = TEMPLATE_CARD;                    
+    else                                     info.template = TEMPLATE_FULL;
     // checkbox
-    info.fullScreen = fullScreenCB.isSelected();
     info.simulationFirst = simulationFirstCB.isSelected();
     // locking
     if (lockPortraitRB.isSelected())        info.locking = LOCK_PORTRAIT;
