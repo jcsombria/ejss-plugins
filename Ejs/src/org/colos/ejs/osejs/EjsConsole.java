@@ -607,7 +607,7 @@ public class EjsConsole implements ConsoleServer {
     programmingLanguageCombo.addItem(new TwoStrings("Java",       OsejsCommon.PROGRAMMING_JAVA));
     programmingLanguageCombo.addItem(new TwoStrings("Javascript", OsejsCommon.PROGRAMMING_JAVASCRIPT));
   //  programmingLanguageCombo.addItem(new TwoStrings("Java + Html",OsejsCommon.PROGRAMMING_JAVA_PLUS_HTML));
-    programmingLanguageCombo.setSelectedIndex(0); // Java by default
+    programmingLanguageCombo.setSelectedIndex(1); // Javascript by default
     
     JPanel programmingLanguagePanel2 = new JPanel (new BorderLayout());
     programmingLanguagePanel2.add(programmingLanguageLabel,BorderLayout.WEST);
