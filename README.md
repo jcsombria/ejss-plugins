@@ -1,3 +1,10 @@
+[**Foreword**](#Foreword)  
+[**What is EJS?**](#WhatisEJS)  
+[**Download**](#Download)  
+[**Credits**](#Credits)  
+[**Links**](#Links)  
+
+<a name="Foreword"></a>
 # Foreword
 
 Simulations play an increasingly important role in the way we teach or do Science. This is especially true in Education, where computers are being used more and more as a way to make lectures more attractive to students, and to help them achieve a deeper understanding of the subject being taught.
@@ -18,6 +25,7 @@ With this situation in mind, EJS has been designed to help a person who wants to
 
 The choice of Java and JavaScript as development languages is justified in terms of their wide acceptance by the international Internet community, and the fact that they are supported under virtually any software platform. This means that EJS, and the simulations created using it, can be used in most, if not all, operating systems. The simulations can also be distributed via the Internet and run within web pages. JavaScript simulations run in any standard Web browser without any special requirement. Java simulations will require a Java-enabled web browser.
 
+<a name="WhatisEJS"></a>
 # What is EJS?
 
 Easy Java/JavaScript Simulations is a software tool (of the type known as code generators) designed for the creation of discrete computer simulations.
@@ -36,6 +44,27 @@ In particular, EJS creates Java and JavaScript applications that are platform in
 
 Because there is an educational value in the process of creating a simulation, EJS can also be used as a pedagogical tool itself. With it, teachers can ask their students to create a simulation by themselves, perhaps by following some guidelines which provided by the instructor. Used in this way, EJS can help students make their conceptualizations explicit. Used in groups, through [social constructionism](http://en.wikipedia.org/wiki/Social_constructionism), it can help improve the students' abilities to discuss and communicate about science, learning to be scientist instead of learning about it.
 
+<a name="Download"></a>
+# Download
+
+## Stable version
+
+EjsS stable version is available at [the release folder](https://gitlab.com/ejsS/tool/tree/master/Release).
+
+Note that the file name ending _yymmdd indicates year, month, day of built.
+
+IMPORTANT: EjsS 5.X requires Java Runtime Environment (JRE) 1.7 or 1.8. Is is NOT fully Java 9 compatible.
+
+## Beta version
+
+You can also download beta releases. They allow you to see the latest features.
+
+## Running EjsS
+
+* Unzip the distribution file. This will create a new folder, e.g. EJS_5.3.
+* Start EJS with the file EjsConsole.jar.
+
+<a name="Credits"></a>
 # Credits
 
 Easy Java/Javascript Simulations is the exclusive copyright of its author, [Francisco Esquembre](http://www.um.es/fem/PersonalWiki), who distributes it under a [GNU GPL license](http://www.gnu.org/copyleft/gpl.html).
@@ -78,6 +107,7 @@ The development of EJS and of this Wiki has been financed by several institution
 
 A special place of honor is, of course, reserved for Paco's family: his wife Araceli and his daughters Araceli and Maria Belén, for all those weekend evenings that he spent (and still spends!) in front of the computer.
 
+<a name="Links"></a>
 # Links
 
 ## EJS at comPADRE digital library
