@@ -630,7 +630,7 @@ public class EjsConsole implements ConsoleServer {
     updateCombo.addItem(new TwoStrings(res.getString("EjsConsole.CheckUpdateEveryWeek"),EjsConsole.WEEK));
     updateCombo.addItem(new TwoStrings(res.getString("EjsConsole.CheckUpdateEveryMonth"),EjsConsole.MONTH));
     updateCombo.setEditable(false);
-    updateCombo.setSelectedIndex(0);
+    updateCombo.setSelectedIndex(1);
         
     JPanel updatePanel2 = new JPanel (new BorderLayout());
     updatePanel2.add(updateButton,BorderLayout.WEST);

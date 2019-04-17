@@ -33,8 +33,8 @@ import org.opensourcephysics.tools.minijar.PathAndFile;;
 public class OsejsCommon {
   static public final String OSEJS_NAME = "Osejs";
   static public final String EJS_SERVER = "www.um.es/fem/EjsWiki";
-
-
+  static public final String EJS_GITLAB = "gitlab.com/ejsS/tool/raw/master";
+        
   static public final String BIN_DIR_PATH = "bin";
   static public final String DOC_DIR_PATH = "doc";
   static public final String EXTENSIONS_DIR_PATH = "extensions";

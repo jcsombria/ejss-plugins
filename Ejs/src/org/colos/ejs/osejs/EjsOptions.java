@@ -175,7 +175,8 @@ public class EjsOptions {
   private java.util.List<TwoStrings> getDLMasterList() {
     java.util.List<TwoStrings> list = new ArrayList<TwoStrings>();
     try {
-      String dlListURL = "http://"+OsejsCommon.EJS_SERVER+ "/Site/EjsSDLs?action=source";
+      String dlListURL = "https://"+OsejsCommon.EJS_GITLAB+ "/Release/EjsS_DLs.cfg";
+//      String dlListURL = "http://"+OsejsCommon.EJS_SERVER+ "/Site/EjsSDLs?action=source";      
 //      String dlListURL = "http://"+OsejsCommon.EJS_SERVER+ (ejs.supportsJava() ? "/Site/EjsDLs?action=source" : "/Site/EjsSDLs?action=source");
 //      String dlListURL = "http://"+OsejsCommon.EJS_SERVER+ (ejs.supportsJava() ? "/Site/EjsJavaDLs?action=source" : "/Site/EjsJavascriptDLs?action=source"); Consultar con Félix
       java.net.URL url = new java.net.URL(dlListURL);
