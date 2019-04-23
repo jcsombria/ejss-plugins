@@ -175,6 +175,7 @@ public class EjsOptions {
   private java.util.List<TwoStrings> getDLMasterList() {
     java.util.List<TwoStrings> list = new ArrayList<TwoStrings>();
     try {
+      // DL master file list
       String dlListURL = "https://"+OsejsCommon.EJS_GITLAB+ "/Release/EjsS_DLs.cfg";
 //      String dlListURL = "http://"+OsejsCommon.EJS_SERVER+ "/Site/EjsSDLs?action=source";      
 //      String dlListURL = "http://"+OsejsCommon.EJS_SERVER+ (ejs.supportsJava() ? "/Site/EjsDLs?action=source" : "/Site/EjsSDLs?action=source");
@@ -197,6 +198,20 @@ public class EjsOptions {
     catch (Exception exc) {
       JOptionPane.showMessageDialog(ejs.getMainPanel(),res.getString("DigitalLibrary.ServerNotAvailable"),
           res.getString("Osejs.File.Error"),JOptionPane.ERROR_MESSAGE);
+
+      // DL local file list
+      String dlList = FileUtils.readTextFile(new File(ejs.getDocDirectory(),"LibraryService/EJS_digital_libraries.txt"),null);
+      if (dlList!=null) {
+        StringTokenizer tkn = new StringTokenizer(dlList,"\n");
+        while (tkn.hasMoreTokens()) {
+          String library = tkn.nextToken();
+          if (library.length()>0) {
+            int index = library.indexOf('|');
+            if (index>=0) list.add(new TwoStrings(library.substring(0, index).trim(),library.substring(index+2).trim())); 
+            else list.add(new TwoStrings("EJS Digital library at "+library,library));
+          }
+        }
+      }
     }
     return list;
   }
@@ -1350,14 +1365,6 @@ public class EjsOptions {
   
   private void initDLlist() {
     dlListModel.clear();
-    String dlList = FileUtils.readTextFile(new File(ejs.getDocDirectory(),"LibraryService/EJS_digital_libraries.txt"),null);
-    if (dlList!=null) {
-      StringTokenizer tkn = new StringTokenizer(dlList,"\n");
-      while (tkn.hasMoreTokens()) {
-        String library = tkn.nextToken();
-        if (library.toLowerCase().startsWith("http://")) dlListModel.addElement(library);
-      }
-    }
   }
 
 

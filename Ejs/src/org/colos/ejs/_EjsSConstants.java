@@ -15,7 +15,7 @@ package org.colos.ejs;
 public class _EjsSConstants  {
 
   static public final String VERSION = "5.3";
-  static public final String VERSION_DATE = "190422";
+  static public final String VERSION_DATE = "190423";
   static public final String WEB_SITE = "http://www.um.es/fem/Ejs";
   
   // Convenience values for mouse events (Can be removed???)

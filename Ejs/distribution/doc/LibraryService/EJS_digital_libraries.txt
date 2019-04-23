@@ -1,2 +1,3 @@
-http://fem.um.es/EjsDL/Examples
-
+EjsS models at Davidson College | http://ejs.davidson.edu
+EjsS models at Universidad de Murcia | http://fem.um.es/EjsDL/Examples
+EjsS models at Singapore | http://iwant2study.org/lookangejss/
