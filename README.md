@@ -82,7 +82,7 @@ Here is a list of contributors in alphabetical order:
 * Fu-Kwun Hwang, National Taiwan Normal University, Taiwan.
 * Howard Kistler, [Hexidec](http://www.hexidec.com/) (for eKit, the HTML editor used for the Description pages).
 * Pat Niemeyer (pat@pat.net) and other developers of [BeanShell](http://www.beanshell.org/), the parser used for syntax checking.
-* José Sánchez, Gonzalo Farias, and Héctor Vargas, National University for Distance Education, Spain.
+* José Sánchez, Gonzalo Farias, Héctor Vargas, Luis de la Torre and Jesús Chacón, National University for Distance Education, Spain.
 * Frank F. Schweickert, AMSTEL Institute, University of Amsterdam, The Nederlands (for his contributions to setting up this Wiki).
 * Yuri B. Senichenkov and Andrei Goussev, Saint Petersburg Polytechnic University, Russia (for the DoPri and Radau ODE solvers).
 * [Jeevanandam Madanagopal](http://www.myjeeva.com/) for com.myjeeva.image.ImageManipulation.java.
