@@ -172,17 +172,19 @@ WebSocketTransport.prototype.setHost = function(host) {
             return this.indexOf(searchString, position) === position;
         };
     }
-    if(host.startsWith('http://')) {
+    if (host.startsWith('http://')) {
         this.host = host.substr(7);
         this.transport = 'http://';
+        console.log("[ERROR] Wrong transport (http instead of ws/wss).");
     } else if (host.startsWith('https://')) {
         this.host = host.substr(8);
         this.transport = 'https://';
+        console.log("[ERROR] Wrong transport (https instead of ws/wss).");
     } else if(host.startsWith('ws://')) {
-        this.host = host.substr(4);
+        this.host = host.substr(5);
         this.transport = 'ws://';
     } else if(host.startsWith('wss://')) {
-        this.host = host.substr(5);
+        this.host = host.substr(6);
         this.transport = 'wss://';
     } else {
         this.host = host;
@@ -285,12 +287,20 @@ HttpTransport.prototype = {
             return this.indexOf(searchString, position) === position;
         };
     }
-    if(host.startsWith('http://')) {
+    if (host.startsWith('http://')) {
       this.host = host.substr(7);
       this.transport = 'http://';
     } else if (host.startsWith('https://')) {
       this.host = host.substr(8);
       this.transport = 'https://';
+    } else if(host.startsWith('ws://')) {
+      console.log("[ERROR] Wrong transport (ws instead of http/https).");
+      this.host = host.substr(5);
+      this.transport = 'ws://';
+    } else if(host.startsWith('wss://')) {
+      console.log("[ERROR] Wrong transport (wss instead of http/https).");
+      this.host = host.substr(6);
+      this.transport = 'wss://';
     } else {
       this.host = host;
       this.transport = 'http://';
