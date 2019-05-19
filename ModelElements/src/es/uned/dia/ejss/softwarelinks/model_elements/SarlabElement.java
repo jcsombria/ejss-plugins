@@ -3,11 +3,10 @@ package es.uned.dia.ejss.softwarelinks.model_elements;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
+import java.security.*;
+import java.security.KeyStore;
+import java.security.cert.*;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,6 +21,8 @@ import javax.json.JsonException;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonValue;
+import javax.net.ssl.*;
+import javax.net.ssl.SSLContext;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
@@ -37,6 +38,9 @@ import org.apache.http.NoHttpResponseException;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.conn.ssl.SSLContexts;
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
@@ -392,33 +396,188 @@ public class SarlabElement extends AbstractModelElement {
 
   public static String httpget(String request) throws Exception {
     Object response = null;
-        CloseableHttpClient httpclient = HttpClients.createDefault();
-        try {
-            HttpGet httpget = new HttpGet(request);
-            ResponseHandler<String> responseHandler = new ResponseHandler<String>() {
-                public String handleResponse(
-                        final HttpResponse response) throws ClientProtocolException, IOException {
-                    int status = response.getStatusLine().getStatusCode();
-                    if (status >= 200 && status < 300) {
-                        HttpEntity entity = response.getEntity();
-                        return entity != null ? EntityUtils.toString(entity) : null;
-                    } else {
-                        throw new ClientProtocolException("Unexpected response status: " + status);
-                    }
-                }
-            };
-            String responseBody = httpclient.execute(httpget, responseHandler);
-            response = responseBody;
-        } catch (NoHttpResponseException e) {
-        } finally {
-          httpclient.close();
-        }
-        return (String)response;
+    CloseableHttpClient httpclient = HttpClients.createDefault();
+    try {
+      response = getHttpResponse(request, httpclient);
+    } catch (SSLHandshakeException e) {
+      int index = request.indexOf(":", request.indexOf(":") + 1);
+      String host = request.substring(8, index);
+      int index2 = request.indexOf("/", request.indexOf("//") + 2);
+      String port = request.substring(index + 1, index2);
+      String passw = "changeit";
+      char[] passphrase = passw.toCharArray();
+      File file = keyStoreFile();
+      InputStream in = new FileInputStream(file);
+      KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
+      ks.load(in, passphrase);
+      in.close();
+      InstallCert.main(host, Integer.parseInt(port), passphrase, ks);
+      SSLContext sslcontext = SSLContexts.custom()
+              .loadTrustMaterial(ks, new TrustSelfSignedStrategy())
+              .build();
+      SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(
+              sslcontext,
+              new String[] { "TLSv1.2" },
+              null,
+              SSLConnectionSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
+      httpclient = HttpClients.custom()
+              .setSSLSocketFactory(sslsf)
+              .build();
+      response = getHttpResponse(request, httpclient);
+    } catch (NoHttpResponseException e) {
+    } finally {
+      httpclient.close();
+    }
+    return (String)response;
   }
-  
+
+  private static Object getHttpResponse(String request, CloseableHttpClient httpclient)
+          throws IOException {
+    Object response;
+    HttpGet httpget = new HttpGet(request);
+    ResponseHandler<String> responseHandler = new ResponseHandler<String>() {
+      public String handleResponse(final HttpResponse response) throws IOException {
+        int status = response.getStatusLine().getStatusCode();
+        if (status >= 200 && status < 300) {
+          HttpEntity entity = response.getEntity();
+          return entity != null ? EntityUtils.toString(entity) : null;
+        } else {
+          throw new ClientProtocolException("Unexpected response status: " + status);
+        }
+      }
+    };
+    String responseBody = httpclient.execute(httpget, responseHandler);
+    response = responseBody;
+    return response;
+  }
+
+  private static File keyStoreFile() {
+    File file = new File("jssecacerts");
+    if (!file.isFile()) {
+      char SEP = File.separatorChar;
+      File dir = new File(System.getProperty("java.home") + SEP
+              + "lib" + SEP + "security");
+      file = new File(dir, "jssecacerts");
+      if (!file.isFile()) {
+        file = new File(dir, "cacerts");
+      }
+    }
+    System.out.println("Loading KeyStore " + file + "...");
+    return file;
+  }
+
   public SarlabConfigurationModel getConfig() {
     return config;
   }
+}
+
+
+class InstallCert {
+
+  public static void main(String host, Integer port, char[] passphrase, KeyStore ks) throws Exception {
+    SSLContext context = SSLContext.getInstance("TLS");
+    TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+    tmf.init(ks);
+    X509TrustManager defaultTrustManager = (X509TrustManager)tmf.getTrustManagers()[0];
+    SavingTrustManager tm = new SavingTrustManager(defaultTrustManager);
+    context.init(null, new TrustManager[] {tm}, null);
+    SSLSocketFactory factory = context.getSocketFactory();
+
+    System.out.println("Opening connection to " + host + ":" + port + "...");
+    SSLSocket socket = (SSLSocket)factory.createSocket(host, port);
+    socket.setSoTimeout(10000);
+    try {
+      System.out.println("Starting SSL handshake...");
+      socket.startHandshake();
+      socket.close();
+      System.out.println();
+      System.out.println("No errors, certificate is already trusted");
+    } catch (SSLException e) {
+      System.out.println();
+      e.printStackTrace(System.out);
+
+      X509Certificate[] chain = tm.chain;
+      if (chain == null) {
+        System.out.println("Could not obtain server certificate chain");
+        return;
+      }
+
+      System.out.println();
+      System.out.println("Server sent " + chain.length + " certificate(s):");
+      System.out.println();
+      MessageDigest sha1 = MessageDigest.getInstance("SHA1");
+      MessageDigest md5 = MessageDigest.getInstance("MD5");
+      for (int i = 0; i < chain.length; i++) {
+        X509Certificate cert = chain[i];
+        System.out.println
+                (" " + (i + 1) + " Subject " + cert.getSubjectDN());
+        System.out.println("   Issuer  " + cert.getIssuerDN());
+        sha1.update(cert.getEncoded());
+        System.out.println("   sha1    " + toHexString(sha1.digest()));
+        md5.update(cert.getEncoded());
+        System.out.println("   md5     " + toHexString(md5.digest()));
+        System.out.println();
+      }
+
+      X509Certificate cert = chain[0];
+      String alias = host;
+      ks.setCertificateEntry(alias, cert);
+
+      OutputStream out = new FileOutputStream("jssecacerts");
+      ks.store(out, passphrase);
+      out.close();
+
+      System.out.println();
+      System.out.println(cert);
+      System.out.println();
+      System.out.println("Added certificate to keystore 'jssecacerts' using alias '" + alias + "'");
+    }
+  }
+
+  private static final char[] HEXDIGITS = "0123456789abcdef".toCharArray();
+
+  private static String toHexString(byte[] bytes) {
+    StringBuilder sb = new StringBuilder(bytes.length * 3);
+    for (int b : bytes) {
+      b &= 0xff;
+      sb.append(HEXDIGITS[b >> 4]);
+      sb.append(HEXDIGITS[b & 15]);
+      sb.append(' ');
+    }
+    return sb.toString();
+  }
+
+  private static class SavingTrustManager implements X509TrustManager {
+
+    private final X509TrustManager tm;
+    private X509Certificate[] chain;
+
+    SavingTrustManager(X509TrustManager tm) {
+      this.tm = tm;
+    }
+
+    @Override
+    public X509Certificate[] getAcceptedIssuers() {
+      return new X509Certificate[0];
+      // throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void checkClientTrusted(final X509Certificate[] chain,
+                                   final String authType)
+            throws CertificateException {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void checkServerTrusted(final X509Certificate[] chain,
+                                   final String authType)
+            throws CertificateException {
+      this.chain = chain;
+      this.tm.checkServerTrusted(chain, authType);
+    }
+  }
+
 }
 
 
