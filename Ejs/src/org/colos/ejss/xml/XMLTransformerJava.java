@@ -65,7 +65,17 @@ public class XMLTransformerJava {
     return cssFilenameList;
   }
 
-  
+  private String getVarInfo(String parameters, Element variable) {
+    String name = BasicElement.evaluateNode(variable, "name");
+    String type = BasicElement.evaluateNode(variable, "type");
+    String comment = BasicElement.evaluateNode(variable, "comment");
+    int index = name.indexOf('[');
+    if (index>0) name = name.substring(0, index).trim();
+    if (parameters.equals("")) parameters ="\""+name+" : "+type+" : "+comment+"\"";
+    else parameters = parameters+",  \""+name+" : "+type+" : "+comment+"\"";
+    return parameters;
+  }
+
   static public boolean saveHTMLFile(Osejs ejs, String libraryPath, File outputFile, 
       SimulationXML simulation, String viewDesired, String locale, String cssFilename, String libPrefix, String htmlPath,
       boolean separatedJSFile, boolean useFullLibrary) {
@@ -613,8 +623,7 @@ public class XMLTransformerJava {
     buffer.append("  };\n\n");
     
     
-   
-    
+
 
     buffer.append("  _model._readParameters = function(json) {\n");
     for (Element page : mSimulation.getModelVariables()) {
@@ -635,11 +644,7 @@ public class XMLTransformerJava {
       for (Element variable : BasicElement.getElementList(page,SimulationXML.sVARIABLE_TAG)) {
         String domain = BasicElement.evaluateNode(variable, "domain");
         if((domain.contains("public"))||(domain.contains("input"))){
-          String name = BasicElement.evaluateNode(variable, "name"); 
-          int index = name.indexOf('[');
-          if (index>0) name = name.substring(0, index).trim();
-          if(parameters.equals("")) parameters ="\""+name+"\"";
-          else parameters = parameters+",  \""+name+"\"";
+          parameters = getVarInfo(parameters, variable);
         }
       }
     }
@@ -653,11 +658,7 @@ public class XMLTransformerJava {
       for (Element variable : BasicElement.getElementList(page,SimulationXML.sVARIABLE_TAG)) {
         String domain = BasicElement.evaluateNode(variable, "domain");
         if((domain.contains("public"))||(domain.contains("output"))){
-          String name = BasicElement.evaluateNode(variable, "name"); 
-          int index = name.indexOf('[');
-          if (index>0) name = name.substring(0, index).trim();
-          if(parameters.equals("")) parameters ="\""+name+"\"";
-          else parameters = parameters+",  \""+name+"\"";
+          parameters = getVarInfo(parameters, variable);
         }
       }
     }
