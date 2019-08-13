@@ -68,11 +68,13 @@ name:'ImageOnUrl',        	info: 'File|String TRANSLATABLE BASE64_IMAGE', 	def: 
 name:'TextOff',        		info: 'String TRANSLATABLE',       	def: '<none>'
 name:'ImageOffUrl',        	info: 'File|String TRANSLATABLE BASE64_IMAGE', 	def: '<none>'
 name:'Checked',        		info: 'boolean',       				def: 'false'
+name:'LabelCSS',       		info: 'Object MULTILINE',       	def: '<none>'
+name:'CheckboxCSS',       	info: 'Object MULTILINE',       	def: '<none>'
 name:'OnChange',        	info: 'Action',           			def: '<no_action>'
 name:'OnCheckOn',        	info: 'Action',           			def: '<no_action>'
 name:'OnCheckOff',        	info: 'Action',           			def: '<no_action>'
 edition:<COLUMN>; <LABELMain>; Checked; Text; TextOn; TextOff; ImageUrl; ImageOnUrl; ImageOffUrl; Disabled; TextAlign; OnChange; OnCheckOn; OnCheckOff;
-edition:<COLUMN>; <LABELAspect>; Visibility; Display; Width; Height; Background; Foreground; Font; Tooltip; ClassName; CSS; WhiteSpace; Transform;
+edition:<COLUMN>; <LABELAspect>; Visibility; Display; Width; Height; Background; Foreground; Font; Tooltip; ClassName; CSS; LabelCSS; CheckboxCSS; WhiteSpace; Transform;
 
 
 class: EJSS_INTERFACE.comboBox
@@ -300,11 +302,13 @@ name:'TextOff',        		info: 'String TRANSLATABLE',       	def: '<none>'
 name:'ImageUrl',        	info: 'File|String TRANSLATABLE BASE64_IMAGE', 	def: '<none>'
 name:'ImageOnUrl',        	info: 'File|String TRANSLATABLE BASE64_IMAGE', 	def: '<none>'
 name:'ImageOffUrl',        	info: 'File|String TRANSLATABLE BASE64_IMAGE', 	def: '<none>'
+name:'LabelCSS',   			info: 'Object MULTILINE',       	def: '<none>'
+name:'RadioCSS',   			info: 'Object MULTILINE',       	def: '<none>'
 name:'OnChange',        	info: 'Action',           			def: '<no_action>'
 name:'OnCheckOn',        	info: 'Action',           			def: '<no_action>'
 name:'OnCheckOff',        	info: 'Action',           			def: '<no_action>'
 edition:<COLUMN>; <LABELMain>; Checked; Text; TextOn; TextOff; ImageUrl; ImageOnUrl; ImageOffUrl; Disabled; TextAlign; OnChange; OnCheckOn; OnCheckOff;
-edition:<COLUMN>; <LABELAspect>; Visibility; Display; Width; Height; Background; Foreground; Font; Tooltip; ClassName; CSS; WhiteSpace; Transform;
+edition:<COLUMN>; <LABELAspect>; Visibility; Display; Width; Height; Background; Foreground; Font; Tooltip; ClassName; CSS; LabelCSS; RadioCSS; WhiteSpace; Transform;
 
 class: EJSS_INTERFACE.separator
 parent:EJSS_INTERFACE.element
@@ -319,10 +323,8 @@ name:'Value',				info: 'int|double',       			def: '0'
 name:'Minimum',        		info: 'int|double',       			def: '0'
 name:'Maximum',        		info: 'int|double',       			def: '100'
 name:'Step',        		info: 'int|double',       			def: '1'
-
-name:'LabelCSS',       			info: 'Object MULTILINE',       	def: '<none>'
-name:'RangeCSS',       			info: 'Object MULTILINE',       	def: '<none>'
-
+name:'LabelCSS',       		info: 'Object MULTILINE',       	def: '<none>'
+name:'RangeCSS',       		info: 'Object MULTILINE',       	def: '<none>'
 name:'TextWidth',           info: 'int|String',       			def: '<none>'
 name:'ShowText',        	info: 'boolean',       				def: 'false'
 name:'Format',        		info: 'Format|String',       		def: '<none>'
