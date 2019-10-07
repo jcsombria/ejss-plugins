@@ -373,6 +373,7 @@ public class RIPElement extends AbstractModelElement {
       for(String expid : explist.getExperiences().keySet()) {
         labIdText.addItem(expid);
       }
+      labIdText.setSelectedIndex(0);
       serverMethodsTableModel.getDataVector().clear();
       for(RIPMethod method : explist.getMethods()) {
         serverMethodsTableModel.addRow(new Object[] {
@@ -423,8 +424,12 @@ public class RIPElement extends AbstractModelElement {
                     proto, config.getHost(), ip, path);
           } else {
             try {
-              username = URLEncoder.encode(username, "UTF-8");
-              password = URLEncoder.encode(password, "UTF-8");
+              username = URLEncoder.encode(username, "UTF-8")
+                  .replace("+", "%20")
+                  .replace("*", "%2A");
+              password = URLEncoder.encode(password, "UTF-8")
+                  .replace("+", "%20")
+                  .replace("*", "%2A");
               host = String.format("%s://%s/SARLABV8.0/proxy?username=%s&password=%s&url=http://%s/%s",
                       proto, config.getHost(), username, password, ip, path);
             }
@@ -445,14 +450,14 @@ public class RIPElement extends AbstractModelElement {
       String url = getServerURL();
       if(!url.endsWith("/")) { url += '/'; }
       HttpTransport transport = new HttpTransport(url + "RIP");
-      
-      // Get experience info     
+
+      // Get experience info
       String id = labIdText.getSelectedItem().toString();
       String query = String.format("?expId=%s", URLEncoder.encode(id, "utf8"));
       String info = transport.get(query).toString();
       RIPExperienceInfo meta = new RIPExperienceInfo(info);
       // Update configuration
-      if(meta != null) {        
+      if(meta != null) {
         configuration.setMetadata(meta);
         expIdText.setText(meta.getInfo().getName());
         labDescriptionText.setText(meta.getInfo().getDescription());
@@ -474,9 +479,8 @@ public class RIPElement extends AbstractModelElement {
         controlsTableModel.setDataVector(controls, columns);
         indicatorsTableModel.setDataVector(indicators, columns);
         return true;
-      }     
-    } catch (NullPointerException | RIPException e) {
-      System.err.println("[ERROR] Cannot parse experience info");
+      }
+    } catch (NullPointerException e) {
     } catch (Exception e) {
       System.err.println("[ERROR] Cannot retrieve experience info");
     }
