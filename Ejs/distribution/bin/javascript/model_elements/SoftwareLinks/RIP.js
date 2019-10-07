@@ -1,8 +1,7 @@
 /**
  * JSON-RPC Client
- * author: Jesus Chacon <jcsombria@gmail.com>
  *
- * Copyright (C) 2013 Jesus Chacon
+ * Copyright (C) 2013 Jesus Chacon and Luis de la Torre
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
