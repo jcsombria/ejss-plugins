@@ -8,25 +8,29 @@
       <img src="./rip.png"> RIP model element
     </h2>
     <p>
-        RIP provides access to other software through internet using JSON-RPC if RIP server is enabled.
-        The <i>Remote Interoperability Protocol</i> (RIP) is a means to ease the data exchanging and control of remote
-        RIP-enabled hardware or software.
-        The protocol is JSON based, so it is human friendly and at the same time can be easily processed by most
-        programming languages.
-        It also provides autodiscovery, meaning that the server informs about the specific capabilities it implements
-        and some details that may be of interest to the user.
+        RIP is to offers a simple, yet powerful, communication solution usable from web clients. As such, RIP only
+        uses pure HTTP standard protocols, supported by all major web browsers.
+        RIP is designed to communicate web clients with online labs (OLs); either VLs or RLs. When used to
+        communicate with a VL, RIP exposes meta-data and input and output methods and variables related to a
+        simulation model that is hosted and runs on a computer (usually, a remote server). When used to communicate
+        with a RL, RIP does the same thing with a control program defined in a computer (usually, a remote server)
+        to monitor and manipulate the lab equipment.
+
     </p>
 
     <h3>Usage</h3>
     <p>
         To add the RIP element to your model, drag the icon element to the list of your model elements. In the
-        configuration dialog, put the URL where the RIP server can be contacted, and click 'Get Server Info' button.
-        If the handshake with the server was successful, the combo box 'experiences' presents a list of available
-        experiences. Select one of them, and the view will update to show the experience data: description, methods,
-        variables, etc.
+        configuration dialog, put the URL where the RIP server can be contacted, and click 'Get Experiences' button.
+        If the handshake with the server was successful, the combo box underneath presents a list of available
+        methods for communication.
     </p>
     <p>
-        The tab 'Reported Variables' shows the variables the server allows to be read or modified. By right-clicking
+        In the tab 'Experience', select one of the received experiences using the dropdown menu, and the view will
+        update to show data of the methods available to communicate with the experience: name, params and description.
+    </p>
+    <p>
+        The tab 'Auto Update' shows the variables the server allows to be read or modified. By right-clicking
         on a variable of the list, one can link with an EJS variable, so the element will handled automatically the
         data transmission, the user being unaware of the internals.
      </p>
@@ -34,17 +38,30 @@
         The element implements the following basic methods:
     </p>
     <ul>
-        <li><i>connect()</i>: Connects with the RIP server in the given IP and port.</li>
-        <li><i>get(vars)</i>: : Gets the values of the server variables specified in vars and returns it. Variable vars
-        is an array of strings containing the names of the server variables wanted to be retrieved.</li>
-        <li><i>set(vars, values)</i>: Sets the values of the server variables vars to values. Variable vars is an array
-        of strings containing the names of the server variables wanted to be written. Variable values is a mixed array
-        containing the values to send.</li>
+        <li><i>result = info(callback, expId = null)</i>: When called without this parameter, info() returns meta-data
+            with the list of experience identifiers associated to all experiences defined in the OL. It also returns
+            more information about the low-level API method call for retrieving meta-data.
+            When called with the expId parameter, info(expId) returns meta-data of the referenced experience.</li>
+        <li><i>connect(expId, callback)</i>: : When this method is called, the client connects to an SSE in the RIP
+            server to: 1) control the user session in the server and 2) receive updates of the variables value in the
+            experience defined by expId. Although updates on the server’s variables values are received upon the
+            connection, this method returns nothing by itself. </li>
+        <li><i>set(variableNames, variableValues, callback, expId)</i>: When this method is called, the values specified
+            in variableValues are assigned to the control program’s or simulation model’s variables named as the strings
+            in variableNames. The control program or simulation model is determined with the expId parameter.
+        </li>
+        <li><i>result = get(variableNames, callback, expId)</i>: When this method is called, the values of the control
+            program’s or simulation model’s variables named as the strings in variableNames are read and returned. The
+            control program or simulation model is determined with the expId parameter. The result returned by this
+            method is a mixed array with the current values of the control program’s or simulation model’s variables
+            specified in the variableNames input parameter.
+        </li>
+        The expId parameter is not required for the connect(), get() and set() methods when the RIP element has been
+        configured and an experience has already been selected in the dropdown menu in the 'Experience tab.
     </ul>
 
     <h3>Example of use:</h3>
     <pre>
-        //If not defined, all the callback options will be replaced with an automated version
         //The initial code will be run once
         //The action after evaluation can be edited, only advanced users, to parse or change the variables updating
         rip.connect();					//Uses the server and port from de editor to connect
