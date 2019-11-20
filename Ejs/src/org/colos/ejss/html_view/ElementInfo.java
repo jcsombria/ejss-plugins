@@ -2,6 +2,8 @@ package org.colos.ejss.html_view;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -28,33 +30,47 @@ public class ElementInfo {
   static private Map<String,ElementInfo> sPropertiesMap = new HashMap<String,ElementInfo>(); 
   static private Map<String,List<TwoStrings>> sConstantsMap = new HashMap<String,List<TwoStrings>>();
 
-  static { // Process the properties file only once
-    Resource res = ResourceLoader.getResource(sPropertiesFile);
-    if (res==null) {
-      System.err.println ("Error: critical properties file is missing : "+sPropertiesFile);
-    }
-    else {
-      ElementInfo classInfo=null;
-      try {
-        BufferedReader in = new BufferedReader(res.openReader());
-        String line = in.readLine().trim();
-        while (line!=null) { // only lines starting with correct keywords are processed
-          if (line.startsWith("class:")) {
-//            System.err.println("Reading class "+line);
-            if (classInfo!=null) sPropertiesMap.put(classInfo.mClassname, classInfo); // archive current class info
-            String classname = line.substring(6).trim();
-            classInfo = sPropertiesMap.get(classname); // Avoid repetitions
-            if (classInfo==null) classInfo = new ElementInfo(classname); // create new class name
+  // [IAR - INICIO]
+  static private void registerProperties(BufferedReader in) {
+    ElementInfo classInfo=null;
+    try {
+      String line = in.readLine().trim();
+      while (line!=null) { // only lines starting with correct keywords are processed
+        if (line.startsWith("class:")) {
+  //        System.err.println("Reading class "+line);
+          if (classInfo!=null) sPropertiesMap.put(classInfo.mClassname, classInfo); // archive current class info
+          String classname = line.substring(6).trim();
+          classInfo = sPropertiesMap.get(classname); // Avoid repetitions
+          if (classInfo==null) classInfo = new ElementInfo(classname); // create new class name
+        }
+        else if (line.startsWith("parent:"))  classInfo.mParent       = line.substring(7).trim();
+        else if (line.startsWith("text:"))    classInfo.mTextProperty = line.substring(5).trim();
+        else if (line.startsWith("import:"))  classInfo.mImportStatements.add(line.substring(7).trim());
+        else if (line.startsWith("accepts:")) classInfo.mAcceptedChildren.add(line.substring(8).trim());
+        else if (line.startsWith("edition:")) classInfo.mEditionBuffer.append(line.substring(8).trim());
+        else if (line.startsWith("name:"))    classInfo.mPropertiesBuffer.append("{"+line+"},");
+        else if (line.startsWith("defaults:"))    {
+          line = line.substring(9).trim();
+          for (String entry : line.split(";")) {
+            entry = entry.trim();
+            int index = entry.indexOf('=');
+            String key,value;
+            if (index>0) {
+              key = entry.substring(0,index).trim();
+              value = entry.substring(index+1).trim();
+            }
+            else key = value = entry;
+  //          System.out.println("Defaults: adding (key=value) = "+key+"="+value);
+            classInfo.mCreationDefaults.put(key, value);
           }
-          else if (line.startsWith("parent:"))  classInfo.mParent       = line.substring(7).trim();
-          else if (line.startsWith("text:"))    classInfo.mTextProperty = line.substring(5).trim();
-          else if (line.startsWith("import:"))  classInfo.mImportStatements.add(line.substring(7).trim());
-          else if (line.startsWith("accepts:")) classInfo.mAcceptedChildren.add(line.substring(8).trim());
-          else if (line.startsWith("edition:")) classInfo.mEditionBuffer.append(line.substring(8).trim());
-          else if (line.startsWith("name:"))    classInfo.mPropertiesBuffer.append("{"+line+"},");
-          else if (line.startsWith("defaults:"))    {
-            line = line.substring(9).trim();
-            for (String entry : line.split(";")) {
+        }
+        else if (line.startsWith("type:"))    {
+          int end = line.indexOf('=');
+          if (end>=0) {
+            String type = line.substring(5,end).trim();
+            List<TwoStrings> list = sConstantsMap.get(type); 
+            if (list==null) list = new ArrayList<TwoStrings>();
+            for (String entry : line.substring(end+1).split(",")) {
               entry = entry.trim();
               int index = entry.indexOf('=');
               String key,value;
@@ -63,39 +79,37 @@ public class ElementInfo {
                 value = entry.substring(index+1).trim();
               }
               else key = value = entry;
-//              System.out.println("Defaults: adding (key=value) = "+key+"="+value);
-              classInfo.mCreationDefaults.put(key, value);
+  //            System.out.println("Type: "+type+ " adding (key=value) = "+key+"="+value);
+              list.add(new TwoStrings(key, value));
             }
+            sConstantsMap.put(type, list);
           }
-          else if (line.startsWith("type:"))    {
-            int end = line.indexOf('=');
-            if (end>=0) {
-              String type = line.substring(5,end).trim();
-              List<TwoStrings> list = sConstantsMap.get(type); 
-              if (list==null) list = new ArrayList<TwoStrings>();
-              for (String entry : line.substring(end+1).split(",")) {
-                entry = entry.trim();
-                int index = entry.indexOf('=');
-                String key,value;
-                if (index>0) {
-                  key = entry.substring(0,index).trim();
-                  value = entry.substring(index+1).trim();
-                }
-                else key = value = entry;
-//                System.out.println("Type: "+type+ " adding (key=value) = "+key+"="+value);
-                list.add(new TwoStrings(key, value));
-              }
-              sConstantsMap.put(type, list);
-            }
-          }
-          line = in.readLine();
         }
-        in.close();
-        if (classInfo!=null) sPropertiesMap.put(classInfo.mClassname, classInfo); // archive current class info
-      } 
-      catch(IOException ex) { ex.printStackTrace(); }
+        line = in.readLine();
+      }
+      in.close();
+      if (classInfo!=null) sPropertiesMap.put(classInfo.mClassname, classInfo); // archive current class info
+    } 
+    catch(IOException ex) { ex.printStackTrace(); }
+  }
+  
+  static { // Process the properties file only once
+    Resource res = ResourceLoader.getResource(sPropertiesFile);
+    if (res==null) {
+      System.err.println ("Error: critical properties file is missing : "+sPropertiesFile);
+    }
+    else {
+      BufferedReader in = new BufferedReader(res.openReader());
+      registerProperties(in);
     }
   }
+  
+  static public void registerPropertiesFromString(String _properties) {
+    Reader propertiesStringReader = new StringReader(_properties);
+    BufferedReader propertiesBuffer = new BufferedReader(propertiesStringReader);
+    registerProperties(propertiesBuffer);
+  }
+  // [IAR - FIN]
   
   /**
    * Returns the info

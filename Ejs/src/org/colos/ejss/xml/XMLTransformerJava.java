@@ -70,18 +70,24 @@ public class XMLTransformerJava {
     String type = BasicElement.evaluateNode(variable, "type");
     String comment = BasicElement.evaluateNode(variable, "comment");
     int index = name.indexOf('[');
-    if (index>0) name = name.substring(0, index).trim();
-    if (parameters.equals("")) parameters ="\""+name+" : "+type+" : "+comment+"\"";
-    else parameters = parameters+",  \""+name+" : "+type+" : "+comment+"\"";
+    if (index > 0)
+      name = name.substring(0, index).trim();
+    if (parameters.equals(""))
+      parameters = "\"" + name + " : " + type + " : " + comment + "\"";
+    else
+      parameters = parameters + ",  \"" + name + " : " + type + " : " + comment
+          + "\"";
     return parameters;
   }
-
+  
   static public boolean saveHTMLFile(Osejs ejs, String libraryPath, File outputFile, 
       SimulationXML simulation, String viewDesired, String locale, String cssFilename, String libPrefix, String htmlPath,
       boolean separatedJSFile, boolean useFullLibrary) {
 
     JSObfuscator.Level obfuscationLevel = ejs.getOptions().fullJSObfuscation() ? JSObfuscator.Level.FULL : JSObfuscator.Level.HALF;
-    XMLTransformerJava transformer = new XMLTransformerJava(ejs,libraryPath,simulation, obfuscationLevel,useFullLibrary);
+    //[IAR INICIO]
+    XMLTransformerJava transformer = new XMLTransformerJava(ejs,libraryPath,simulation, obfuscationLevel,separatedJSFile,useFullLibrary);
+    //[IAR fin]
 
     Element viewSelected = simulation.getViewSelected(viewDesired);
     try {
@@ -101,17 +107,21 @@ public class XMLTransformerJava {
   private SimulationXML mSimulation;
   private Osejs mEjs;
   private JSObfuscator mObfuscator;
+  //[IAR INICIO]
+  private boolean mSeparatedJSFile;
 
   /**
    * XML to HTML transformer
    * @param simulation
    * @param output
    */
-  public XMLTransformerJava(Osejs ejs, String libraryPath, SimulationXML simulation, JSObfuscator.Level obfuscationLevel, boolean useFullLibrary) {
+  public XMLTransformerJava(Osejs ejs, String libraryPath, SimulationXML simulation, JSObfuscator.Level obfuscationLevel, boolean separatedJSFile, boolean useFullLibrary) {
     mEjs = ejs;
     mSimulation = simulation;
+    mSeparatedJSFile = separatedJSFile;
     mObfuscator = new JSObfuscator(libraryPath,useFullLibrary,obfuscationLevel);
   }
+  //[IAR FIN]
 
   // ------------------------------------
   // HTML generation
@@ -169,12 +179,14 @@ public class XMLTransformerJava {
   boolean saveSimulationHTML(File outputFile, Element viewDesired, String locale, java.util.List<String> cssFilenameList, String libraryPrefix, String codebase) {
     try {
       outputFile.getParentFile().mkdirs();
-      if (mEjs.getOptions().separateJSfile()) {
+      //[IAR INICIO]
+      if (mSeparatedJSFile) {
+        //[IAR FIN]
         String title = mSimulation.getInformation(INFORMATION.TITLE);
         String htmlhead = mSimulation.getInformation(INFORMATION.HTMLHEAD);
         String name = org.colos.ejs.library.utils.FileUtils.getPlainName(outputFile);
         String scriptsImport = getScriptsImport(codebase,true);
-        saveToFile(outputFile, mObfuscator.generatePlainHTML(title, name, htmlhead, scriptsImport, getMetadataCode(codebase,libraryPrefix), libraryPrefix, codebase, 
+        saveToFile(outputFile, mObfuscator.generatePlainHTML(title, name, htmlhead, mEjs.getPluginScripts(), scriptsImport, getMetadataCode(codebase,libraryPrefix), libraryPrefix, codebase, 
             cssFilenameList));
         File jsFile = new File(outputFile.getParentFile(),name+".js");
         if (locale==null) locale = SimulationXML.sDEFAULT_LOCALE;
@@ -212,7 +224,7 @@ public class XMLTransformerJava {
     String scriptsImport = getScriptsImport(codebasePath,true);
     String modelCode = (mSimulation.isViewOnly()) ? null : getModelStringBuffer(viewDesired, locale,libraryPrefix,true).toString();
     String viewCode = getViewStringBuffer(codebasePath, viewDesired,locale,true).toString();
-    return mObfuscator.generate(title, name, htmlHead, scriptsImport, metadataCode, modelCode, viewCode, cssFilenameList, mSimulation.getServerLocalPort(), libraryPrefix, 
+    return mObfuscator.generate(title, name, htmlHead, mEjs.getPluginScripts(), scriptsImport, metadataCode, modelCode, viewCode, cssFilenameList, mSimulation.getServerLocalPort(), libraryPrefix, 
         codebasePath);
   }
 
@@ -403,7 +415,10 @@ public class XMLTransformerJava {
       HashSet<String> filesSet = new HashSet<String>();
       for (Element page : mSimulation.getModelElements()) {
         String filename = BasicElement.evaluateNode(page,"file");
-        filesSet.add(filename);
+        //[IAR INICIO]
+        if(filename.length() > 0)
+          filesSet.add(filename);
+        //[IAR FIN]
       } 
       for (String filename : filesSet) {
         File file = new File(mEjs.getBinDirectory(), "javascript/model_elements/"+filename);
@@ -623,7 +638,38 @@ public class XMLTransformerJava {
     buffer.append("  };\n\n");
     
     
+    buffer.append("  function _serializePublic() { return _model.serializePublic(); }\n\n");
+    buffer.append("  _model._userSerializePublic = function() {\n");
+    buffer.append("    return {\n");
+    firstOne = true;
+    for (Element page : mSimulation.getModelVariables()) {
+      if (!mSimulation.isEnabled(page)) continue; // Disabled pages of variables are simply ignored
 
+      for (Element variable : BasicElement.getElementList(page,SimulationXML.sVARIABLE_TAG)) {
+        String domain = BasicElement.evaluateNode(variable, "domain");
+        if((domain.contains("public"))||(domain.contains("output"))){
+          String name = BasicElement.evaluateNode(variable, "name");
+          int index = name.indexOf('[');
+          if (index>0) name = name.substring(0, index).trim();
+          if (firstOne) firstOne = false;
+          else buffer.append(",\n");
+          buffer.append("      "+name+" : "+name);
+        }
+//
+//        String dimension = BasicElement.evaluateNode(variable, "dimension");
+//        if (dimension!=null && dimension.trim().length()>0) {
+//          java.util.StringTokenizer tkn = new java.util.StringTokenizer(dimension,"[] ");
+//          int dim = tkn.countTokens();
+//          buffer.append("    "+name+" : EJSS_TOOLS.serializeArray("+name+","+dim+"),");
+//        }
+//        else { // Simple variable 
+//          buffer.append("    "+name+" : "+name+"");
+//        }
+      }
+    }
+    buffer.append("\n    };\n");
+    buffer.append("  };\n\n");
+    
 
     buffer.append("  _model._readParameters = function(json) {\n");
     for (Element page : mSimulation.getModelVariables()) {
@@ -637,34 +683,61 @@ public class XMLTransformerJava {
     }
     buffer.append("  };\n\n");
     
-    buffer.append("  _model._inputAndPublicParameters =");
-    String parameters = "";
+    buffer.append("  _model._readParametersPublic = function(json) {\n");
     for (Element page : mSimulation.getModelVariables()) {
       if (!mSimulation.isEnabled(page)) continue; // Disabled pages of variables are simply ignored
       for (Element variable : BasicElement.getElementList(page,SimulationXML.sVARIABLE_TAG)) {
         String domain = BasicElement.evaluateNode(variable, "domain");
         if((domain.contains("public"))||(domain.contains("input"))){
+          String name = BasicElement.evaluateNode(variable, "name"); 
+          int index = name.indexOf('[');
+          if (index>0) name = name.substring(0, index).trim();
+          buffer.append("    if(typeof json."+name+" != \"undefined\") "+name+" = json."+name+";\n");
+        }
+      }
+    }
+    buffer.append("  };\n\n");
+    
+
+    buffer.append("  _model._inputAndPublicParameters =");
+    String parameters = "";
+    for (Element page : mSimulation.getModelVariables()) {
+      if (!mSimulation.isEnabled(page))
+        continue; // Disabled pages of variables are simply ignored
+      for (Element variable : BasicElement.getElementList(page,
+          SimulationXML.sVARIABLE_TAG)) {
+        String domain = BasicElement.evaluateNode(variable, "domain");
+        if ((domain.contains("public")) || (domain.contains("input"))) {
           parameters = getVarInfo(parameters, variable);
         }
       }
     }
-    
-    buffer.append(" ["+ parameters+"]; \n\n");
-    
+
+    buffer.append(" [" + parameters + "]; \n\n");
+
     buffer.append("  _model._outputAndPublicParameters =");
     parameters = "";
     for (Element page : mSimulation.getModelVariables()) {
-      if (!mSimulation.isEnabled(page)) continue; // Disabled pages of variables are simply ignored
-      for (Element variable : BasicElement.getElementList(page,SimulationXML.sVARIABLE_TAG)) {
+      if (!mSimulation.isEnabled(page))
+        continue; // Disabled pages of variables are simply ignored
+      for (Element variable : BasicElement.getElementList(page,
+          SimulationXML.sVARIABLE_TAG)) {
         String domain = BasicElement.evaluateNode(variable, "domain");
-        if((domain.contains("public"))||(domain.contains("output"))){
+        if ((domain.contains("public")) || (domain.contains("output"))) {
           parameters = getVarInfo(parameters, variable);
         }
       }
     }
+
+    buffer.append(" [" + parameters + "];\n\n");
+
+    buffer.append("  function _unserializePublic(json) { return _model.unserializePublic(json); }\n\n");
     
-    buffer.append(" ["+ parameters+"];\n\n");
-    
+    buffer.append("  _model._userUnserializePublic = function(json) {\n");
+    buffer.append("    _model._readParametersPublic(json);\n");
+    buffer.append("   _resetSolvers();\n");
+    buffer.append("   _model.update();\n");
+    buffer.append("  };\n\n");
     
     buffer.append("  function _unserialize(json) { return _model.unserialize(json); }\n\n");
     

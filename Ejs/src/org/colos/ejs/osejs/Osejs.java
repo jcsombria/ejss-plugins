@@ -9,6 +9,11 @@ package org.colos.ejs.osejs;
 
 import java.io.*;
 import java.util.*;
+//[IAR INICIO]
+import java.util.Map.Entry;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+//[IAR FIN]
 import java.awt.*;
 import java.awt.event.*;
 import java.lang.reflect.InvocationTargetException;
@@ -18,6 +23,9 @@ import java.net.URL;
 import java.nio.charset.Charset;
 
 import javax.swing.*;
+//[IAR INICIO]
+import javax.swing.filechooser.FileSystemView;
+//[IAR FIN]
 
 import org.colos.ejs.osejs.utils.*;
 import org.colos.ejs.osejs.edition.*;
@@ -25,6 +33,12 @@ import org.colos.ejs.osejs.edition.*;
 import org.colos.ejs.osejs.edition.html.DescriptionEditor;
 import org.colos.ejs.osejs.edition.html_view.OneView;
 import org.colos.ejs.osejs.edition.translation.TranslationEditor;
+//[IAR INICIO]
+import org.colos.ejs.osejs.plugins.Plugin;
+import org.colos.ejs.osejs.plugins.PluginButtonInfo;
+import org.colos.ejs.osejs.plugins.PluginMainOptionInfo;
+import org.colos.ejs.osejs.plugins.PluginRightClickOptionInfo;
+//[IAR FIN]
 import org.colos.ejs._EjsSConstants;
 import org.colos.ejs.library.Animation;
 import org.colos.ejs.library.Memory;
@@ -36,6 +50,11 @@ import org.colos.ejs.library.utils.HardcopyWriter;
 import org.colos.ejs.library.utils.LocaleItem;
 import org.colos.ejs.library.utils.PasswordDialog;
 import org.colos.ejs.library.utils.TemporaryFilesManager;
+//[IAR INICIO]
+import org.colos.ejs.model_elements.EJSAware;
+import org.colos.ejss.html_view.ElementInfo;
+import org.colos.ejss.xml.JSObfuscator;
+//[IAR FIN]
 import org.colos.ejss.xml.SimulationXML;
 import org.colos.ejss.xml.SimulationXML.INFORMATION;
 import org.colos.ejss.xml.XMLTransformerJava;
@@ -123,6 +142,24 @@ public class Osejs {
 
   private String openString = null;
 
+  // [IAR INICIO]
+  // Variables for plugin support
+  private Set<Plugin> userDefinedPlugins = new HashSet<Plugin>();
+  
+  // Functionality
+  private HashMap<PluginButtonInfo, JPopupMenu> buttonPopupMenus = new HashMap<PluginButtonInfo, JPopupMenu>();
+  private Vector<PluginMainOptionInfo> pluginMainOptions = new Vector<PluginMainOptionInfo>();
+  private Vector<PluginMainOptionInfo> pluginModelOptions = new Vector<PluginMainOptionInfo>();
+  
+  private java.util.List<String> pluginHtmlElements = new ArrayList<String>();
+
+  // Resources
+  private HashMap<String, Icon> pluginIconResources = new HashMap<String, Icon>();
+
+  // Scripts
+  private StringBuffer pluginScripts = new StringBuffer();
+  // [IAR FIN]
+
   static {
     try {
       isMacOSX = false;
@@ -185,6 +222,11 @@ public class Osejs {
   public boolean supportsHtml() { return mProgrammingLanguage==PROGRAMMING_LANGUAGE.JAVASCRIPT || mProgrammingLanguage==PROGRAMMING_LANGUAGE.JAVA_PLUS_HTML; }
   public boolean supportsJavascript() { return mProgrammingLanguage==PROGRAMMING_LANGUAGE.JAVASCRIPT; }
 
+  // [IAR INICIO]
+  // Variables for plugin support
+  public Set<Plugin> getUserDefinedPlugins() { return this.userDefinedPlugins; }
+  // [IAR FIN]
+  
   public Object getViewElement(String _elementName) {
     ControlElement element = viewEditor.getTree().getControl().getElement(_elementName);
     if (element!=null) return element.getObject();
@@ -383,6 +425,22 @@ public class Osejs {
     // Initialize EJS
     ejs.initializeDirectories(outputPath);
     Generate.copyEJSLibrary(ejs); // put EJS library in place 
+    // [IAR INICIO]
+    // Load plugins if any
+    ejs.loadPlugins();
+    for (Plugin p : ejs.userDefinedPlugins) {
+      // Initialize
+      p.Initialize(ejs);
+      
+      // General
+      if (p.getMainOptions() != null)
+        ejs.pluginMainOptions.addAll(p.getMainOptions());
+
+      // Model
+      if (p.getModelOptions() != null)
+        ejs.pluginModelOptions.addAll(p.getModelOptions());
+    }
+    // [IAR FIN]
     JFrame frame = ejs.mainFrame = new JFrame(sysRes.getString("Osejs.Title"));
     org.colos.ejs.library.control.value.BooleanValue mustAskAuthorInfo = new org.colos.ejs.library.control.value.BooleanValue(false);
     final ProgressDialog pD = ejs.initializeInterface(progressFlag,frame,screen,mustAskAuthorInfo);
@@ -1282,6 +1340,71 @@ public class Osejs {
     iconbar.add(optionsButton);
     iconbar.add(infoButton);
     //    iconbar.add(Box.createVerticalStrut(20));
+    
+    //[IAR INICIO]
+    // Add buttons required by plugins
+    for (Plugin plugin : userDefinedPlugins) {
+      try {
+        Vector<PluginButtonInfo> pluginButtonInfoVector = plugin.getBarButtons();
+        if (pluginButtonInfoVector == null) continue;
+        
+        if (pluginButtonInfoVector.size() > 0) {
+          iconbar.addSeparator();
+          
+          for (PluginButtonInfo buttonInfo : pluginButtonInfoVector) {
+            if (buttonInfo != null) {
+              JComponent pluginButton = new JLabel (buttonInfo.getIcon());   
+              pluginButton.setBorder(border);
+              pluginButton.setToolTipText(buttonInfo.getToolTipText());
+              pluginButton.setCursor(handCursor);
+              pluginButton.addMouseListener(new MouseAdapter() {
+                public void mousePressed(final MouseEvent _evt) {
+                  ((JComponent) _evt.getComponent()).setBorder(clickedBorder);
+                  javax.swing.Timer timer = new javax.swing.Timer(DELAY_FOR_LABEL_BORDERS,new ActionListener(){
+                    public void actionPerformed(ActionEvent _actionEvent) { ((JComponent) _evt.getComponent()).setBorder(border); }
+                  });
+                  timer.setRepeats(false);
+                  timer.start();
+                  if (OSPRuntime.isPopupTrigger(_evt)) { //SwingUtilities.isRightMouseButton(_evt)) {
+                    JPopupMenu popup = buttonPopupMenus.get(buttonInfo);
+                    if (popup==null) {
+                      popup = new JPopupMenu();
+                      
+                      if (buttonInfo.getRightClickActions() != null) {
+                        for (PluginRightClickOptionInfo rcOption : buttonInfo.getRightClickActions()) {
+                          if (rcOption != null) {
+                            popup.add(new AbstractAction(rcOption.getTitle()){
+                              public void actionPerformed(java.awt.event.ActionEvent e) { 
+                                SwingUtilities.invokeLater(rcOption.getAction());
+                              }
+                            });
+                          }
+                          else {
+                            popup.addSeparator();
+                          }
+                        }
+                      }
+                      buttonPopupMenus.put(buttonInfo, popup);
+                    }
+                    popup.show(_evt.getComponent(),0,0);
+                  }
+                  else if (SwingUtilities.isLeftMouseButton(_evt)) {
+                    if (buttonInfo.getLeftClickAction() != null) {
+                      SwingUtilities.invokeLater(buttonInfo.getLeftClickAction());
+                    }
+                  }
+                }
+              });
+              
+              iconbar.add(pluginButton);
+            }
+          }
+        }
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+    //[IAR FIN]
 
     iconbar.add(Box.createVerticalGlue());
 
@@ -1290,7 +1413,21 @@ public class Osejs {
     //JPanel mainbarPanelLeft = new JPanel(new FlowLayout(FlowLayout.LEFT));
     //mainbarPanelLeft.setBorder(new javax.swing.border.EmptyBorder(0,0,0,0));
 
-    mainButtons = MenuUtils.createRadioGroup(mainOptions,"Osejs.Main.", new ActionListener() {
+    //[IAR - INICIO]
+    java.util.List<String> extendedOptions = new ArrayList<String>();
+    //[IAR - FIN]
+    //[IAR - INICIO]
+    for (int i=0; i<mainOptions.length; i++) extendedOptions.add(mainOptions[i]);
+    Vector<PluginMainOptionInfo> optionList = getPluginMainOptions();
+    if (optionList != null) {
+      for (PluginMainOptionInfo optionInfo : optionList) {
+        extendedOptions.add(optionInfo.getId());
+      }
+    }
+    String[] stringArray = new String[extendedOptions.size()];
+    stringArray = extendedOptions.toArray(stringArray);
+    mainButtons = MenuUtils.createRadioGroup(stringArray,"Osejs.Main.", new ActionListener() {
+    //[IAR - FIN]
       public void actionPerformed (java.awt.event.ActionEvent _evt) { 
         cardLayout.show (mainPanel,_evt.getActionCommand()); 
       }
@@ -1300,8 +1437,10 @@ public class Osejs {
     for (int i=0; i<mainButtons.length; i++) {
       if (mainButtons[i]==null) continue;
       mainButtons[i].setFont(titleFont);
-      mainButtons[i].setForeground(InterfaceUtils.color(res.getString(mainOptions[i]+".Color")));
-      mainButtons[i].setToolTipText(res.getString("Osejs.Main."+mainOptions[i]+".ToolTip"));
+      //[IAR - INICIO]
+      mainButtons[i].setForeground(InterfaceUtils.color(res.getString(extendedOptions.get(i)+".Color")));
+      mainButtons[i].setToolTipText(res.getString("Osejs.Main."+extendedOptions.get(i)+".ToolTip"));
+      //[IAR - FIN]
       //mainButtons[i].setBorder(BorderFactory.createEmptyBorder(2,8,2,8));
       mainButtons[i].setMargin(inset);
       mainbar.add (mainButtons[i]);
@@ -1370,6 +1509,15 @@ public class Osejs {
     //        mainPanel.add(editors[i].getComponent(),mainOptions[i]);
     //      }
     //    }
+
+    //[IAR - INICIO]
+    if (optionList != null) {
+      for (PluginMainOptionInfo optionInfo : optionList) {
+        if (optionInfo.getEditor() != null && optionInfo.getEditor().getComponent() != null)
+          mainPanel.add (optionInfo.getEditor().getComponent(), optionInfo.getId());
+      }
+    }
+    //[IAR - FIN]
 
     // Select the first (Description) panel
     mainButtons[0].setSelected (true);
@@ -2878,6 +3026,141 @@ public class Osejs {
     }
   }
 
+
+  // [IAR INICIO]
+  public Vector<PluginMainOptionInfo> getPluginMainOptions() {
+    return pluginMainOptions;
+  }
+
+  public Vector<PluginMainOptionInfo> getPluginModelOptions() {
+    return pluginModelOptions;
+  }
+
+  public java.util.List<String> getPluginHtmlElements() {
+    return pluginHtmlElements;
+  }
+  
+  public Icon getPluginIcon (String _key) {
+    return pluginIconResources.get(_key);
+  }
+  
+  public String getPluginScripts() {
+    return pluginScripts.toString();
+  }
+  
+  private void loadPlugins() {
+    File pluginsDir = new File(configDirectory, OsejsCommon.CUSTOM_PLUGIN_DIR_PATH );
+    File files[] = FileSystemView.getFileSystemView().getFiles(pluginsDir, false);
+    
+    // Finally, jar files with elements
+    for (int i = 0; i<files.length; i++) {
+      //System.out.println("File "+files[i].getName());
+      if (files[i].isDirectory()) continue;
+      if (files[i].getName().toLowerCase().endsWith(".jar")) {
+        Set<Plugin> pluginSet = readPlugins(files[i]);
+        userDefinedPlugins.addAll(pluginSet);
+      }
+    }
+    
+    if (userDefinedPlugins.size() > 0)
+      for (Plugin p : userDefinedPlugins) {
+        // String Resources
+        if(p.getResources() != null) 
+          for (TwoStrings ts : p.getResources())
+            ResourceUtil.registerResource("Resources", ts.getFirstString(), ts.getSecondString());
+        if(p.getSystemResources() != null) 
+          for (TwoStrings ts : p.getSystemResources())
+            ResourceUtil.registerResource("SystemResources", ts.getFirstString(), ts.getSecondString());
+        if(p.getHtmlViewResources() != null) 
+          for (TwoStrings ts : p.getHtmlViewResources())
+            ResourceUtil.registerResource("HtmlViewResources", ts.getFirstString(), ts.getSecondString());
+        if(p.getElementTips() != null) 
+          for (TwoStrings ts : p.getElementTips())
+            ResourceUtil.registerResource("ElementTips", ts.getFirstString(), ts.getSecondString());
+        
+        // HTML View Elements
+        if (p.getHtmlViewElementInfo() != null)
+          ElementInfo.registerPropertiesFromString(p.getHtmlViewElementInfo());
+        if (p.getHtmlViewElements() != null)
+          pluginHtmlElements.addAll(p.getHtmlViewElements());
+        
+        // Other Resources
+        if(p.getIconResources() != null) 
+          for (Entry<String, ImageIcon> icon : p.getIconResources().entrySet())
+            pluginIconResources.put(icon.getKey(), icon.getValue());
+        if (p.getJSScripts() != null) {
+          pluginScripts.append("<script type=\"text/javascript\"><!--//--><![CDATA[//><!--\n");
+          pluginScripts.append(p.getJSScripts());
+          pluginScripts.append("//--><!]]></script>\n");
+        }
+      }
+    
+    System.out.println("Number of plugins: " + userDefinedPlugins.size());
+  }
+  
+  private Set<Plugin> readPlugins(File _jarFile) {
+    Set<Plugin> pluginSet;
+
+    pluginSet = new HashSet<Plugin>();
+    try {
+      ZipInputStream input = new ZipInputStream(new FileInputStream(_jarFile));
+      ZipEntry zipEntry = null;
+      while ((zipEntry = input.getNextEntry())!=null) {
+        if (zipEntry.isDirectory()) continue; // don't include directories
+        if (zipEntry.getName().endsWith(".class")) {
+          Plugin plugin = instantiatePlugin(zipEntry.getName(),_jarFile);
+          if (plugin!=null) pluginSet.add(plugin);
+        }
+      }
+      input.close();
+    }
+    catch (Exception exc) {
+      exc.printStackTrace();
+      System.err.println ("Osejs : Error when reading JAR file for plugin: "+_jarFile.getAbsolutePath());
+    }
+
+    return pluginSet;
+  }
+  
+  /**
+   * Instantiates a class, using its default constructor, if it implements the Plugin interface
+   * @param _pluginClassname
+   * @param _jarPath if non-null, keeps the information for future instantiation of the plugin
+   * @return a Plugin for the plugin
+   */
+  public Plugin instantiatePlugin(String _pluginClassname, File _jarFile) {
+    if (_pluginClassname.endsWith(".class")) _pluginClassname = _pluginClassname.substring(0,_pluginClassname.length()-6);
+    _pluginClassname = _pluginClassname.replace('/', '.');
+    try {
+//      System.err.println("Instantiate "+_pluginClassname+ " from jar file "+_jarFile);
+      Class<Plugin> pluginType = Plugin.class;
+      if (_jarFile==null) { // Class from the standard classpath
+        Class<?> pluginClass = Class.forName(_pluginClassname);
+        if (pluginType.isAssignableFrom(pluginClass) && !java.lang.reflect.Modifier.isAbstract(pluginClass.getModifiers())) {
+          Object obj = pluginClass.newInstance();
+          if (obj instanceof EJSAware) ((EJSAware) obj).setEJS(this);
+          return pluginType.cast(obj);
+        }
+//        System.err.println ("Osejs: Not a plugin class: "+_pluginClassname);
+      }
+      else {
+        ResourceLoader.addSearchPath(_jarFile.getAbsolutePath()); // add the search path so that images and other resources are found
+        Class<?> pluginClass = LaunchClassChooser.getClassOfType(_jarFile.getAbsolutePath(), _pluginClassname, pluginType);
+        if (pluginClass==null) return null;
+        System.err.println ("Instantiating class "+_pluginClassname + " from jar file : "+_jarFile.getAbsolutePath());
+        Plugin plugin = (Plugin) pluginClass.newInstance();
+        if (plugin instanceof EJSAware) ((EJSAware) plugin).setEJS(this);
+
+        return plugin;
+      }
+    }
+    catch (Exception exc) { // Do nothing, but return null
+      System.err.println ("Error when instantiating model element "+_pluginClassname);
+      exc.printStackTrace();
+    }
+    return null;
+  }
+  // [IAR FIN]
 
   /**
    * Runs EJS and loads a given file

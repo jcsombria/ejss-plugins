@@ -10,6 +10,7 @@ package org.colos.ejs.osejs.edition;
 import org.colos.ejs.osejs.edition.ode_editor.EquationEditor;
 import org.colos.ejs.osejs.edition.variables.ElementsEditor;
 import org.colos.ejs.osejs.edition.variables.VariablesEditor;
+import org.colos.ejs.osejs.plugins.PluginMainOptionInfo;
 import org.colos.ejs.osejs.utils.*;
 import org.colos.ejs.osejs.Osejs;
 import org.colos.ejs.osejs.OsejsCommon;
@@ -50,6 +51,10 @@ public class ModelEditor implements Editor {
   private JPanel mainPanel = new JPanel (new BorderLayout());
   private JRadioButton buttons[];
   private Osejs ejs = null;
+  
+  //[IAR - INICIO]
+  private java.util.List<String> extendedKeywords = new ArrayList<String>();
+  //[IAR - FIN]
 
 //  private JComboBox<TwoStrings> runningModeCombo;
   private JCheckBox startCheckBox;
@@ -359,14 +364,35 @@ public class ModelEditor implements Editor {
     JPanel evolutionPanel = new JPanel (new BorderLayout());
     evolutionPanel.add(leftPanel,BorderLayout.WEST);
 
+    //[IAR - INICIO]
+    // Build the complete list of options
+    for (int i=0; i<keywords.length; i++) extendedKeywords.add(keywords[i]);
+    Vector<PluginMainOptionInfo> optionList = ejs.getPluginModelOptions();
+    // Add the options added by plugins
+    if (optionList != null) {
+      for (PluginMainOptionInfo optionInfo : optionList) {
+        extendedKeywords.add(optionInfo.getId());
+      }
+    }
+    
     // --- Now, create the editors
-    editors = new Editor[6];
+    editors = new Editor[extendedKeywords.size()];
+    //[IAR - FIN]
     editors[0] = variablesEditor = new VariablesEditor (_ejs);
     editors[1] = initializationEditor = new TabbedEditor (_ejs, Editor.CODE_EDITOR,"Model.Initialization");
     editors[2] = evolutionEditor = new TabbedEvolutionEditor (_ejs);
     editors[3] = constraintsEditor = new TabbedEditor (_ejs, Editor.CODE_EDITOR,"Model.Constraints");
     editors[4] = libraryEditor = new TabbedLibraryEditor (_ejs);
     editors[5] = elementsEditor = new ElementsEditor (_ejs);
+    //[IAR - INICIO]
+    // Add the editors added by plugins
+    if (optionList != null) {
+      int originalEditorNumber = keywords.length;
+      for (int i = 0; i < optionList.size(); i++) {
+        editors[originalEditorNumber + i] = optionList.get(i).getEditor();
+      }
+    }
+    //[IAR - FIN]
 
     ActionListener al = new ActionListener() {
       public void actionPerformed (java.awt.event.ActionEvent evt) {
@@ -382,7 +408,11 @@ public class ModelEditor implements Editor {
     Insets inset = new java.awt.Insets(0,3,0,3);
     
     font = InterfaceUtils.font(null,res.getString("Model.TitleFont"));
-    buttons = MenuUtils.createRadioGroup (keywords,"Model.",al,_ejs.getOptions().useShortHeaders());
+    //[IAR - INICIO]
+    String[] stringArray = new String[extendedKeywords.size()];
+    stringArray = extendedKeywords.toArray(stringArray);
+    buttons = MenuUtils.createRadioGroup (stringArray,"Model.",al,_ejs.getOptions().useShortHeaders());
+    //[IAR - FIN]
     for (int i=0; i<buttons.length; i++) {
       buttons[i].setBorder(buttonsBorder);
       gbc.gridx = i;
@@ -404,6 +434,14 @@ public class ModelEditor implements Editor {
     //libraryPanel.add(jarsPanel,BorderLayout.SOUTH);
     panel.add (libraryPanel,keywords[4]);
     panel.add (elementsEditor.getComponent(),keywords[5]);
+
+    //[IAR - INICIO]
+    if (optionList != null) {
+      for (PluginMainOptionInfo optionInfo : optionList) {
+        panel.add (optionInfo.getEditor().getComponent(), optionInfo.getId());
+      }
+    }
+    //[IAR - FIN]
 
     cardLayout.show (panel,keywords[0]);
     buttons[0].setSelected(true);
@@ -521,7 +559,9 @@ public class ModelEditor implements Editor {
 
   public void setName (String _name) {
     name = _name;
-    for (int i=0; i<editors.length; i++) editors[i].setName(_name+"."+keywords[i]);
+    //[IAR - INICIO]
+    for (int i=0; i<editors.length; i++) editors[i].setName(_name+"."+extendedKeywords.get(i));
+    //[IAR - FIN]
   }
 
   public String getName() { return name; }
@@ -619,6 +659,13 @@ public class ModelEditor implements Editor {
     constraintsEditor.fillSimulationXML(_simXML);
     libraryEditor.fillSimulationXML(_simXML);
     elementsEditor.fillSimulationXML(_simXML);
+    //[IAR - INICIO]
+    // Fill simulation of plugin model elements
+    for (PluginMainOptionInfo optionInfo : ejs.getPluginModelOptions()) {
+      if (optionInfo.getEditor() != null)
+        optionInfo.getEditor().fillSimulationXML(_simXML);
+    }
+    //[IAR - FIN]
   }
 
   public void fillSimulationXMLForHtmlView(SimulationXML _simXML) {
@@ -647,8 +694,10 @@ public class ModelEditor implements Editor {
       "<"+name+".RealTimeVariable>"+realtimeField.getText()+"</"+name+".RealTimeVariable>\n" +
       "<"+name+".Autostart>"+startCheckBox.isSelected()+"</"+name+".Autostart>\n");
 //      "<"+name+".RunningMode>"+runningModeCombo.getSelectedIndex()+"</"+name+".RunningMode>\n");
+    //[IAR - INICIO]
     for (int i=0; i<editors.length; i++)
-      save.append("<"+name+"."+keywords[i]+">\n"+editors[i].saveStringBuffer()+"</"+name+"."+keywords[i]+">\n");
+      save.append("<"+name+"."+extendedKeywords.get(i)+">\n"+editors[i].saveStringBuffer()+"</"+name+"."+extendedKeywords.get(i)+">\n");
+    //[IAR - FIN]
     return save;
   }
 
@@ -719,13 +768,15 @@ public class ModelEditor implements Editor {
     }
     // End of backwards compatibility
     
+    //[IAR - INICIO]
     // Pass over the rest of the work to the editors
     for (int i=0; i<editors.length; i++) {
-      int begin = _input.indexOf("<"+name+"."+keywords[i]+">\n");
+      int begin = _input.indexOf("<"+name+"."+extendedKeywords.get(i)+">\n");
       if (begin<0) continue;
-      int end = _input.indexOf("</"+name+"."+keywords[i]+">\n");
-      editors[i].readString(_input.substring(begin+keywords[i].length()+name.length()+4,end));
+      int end = _input.indexOf("</"+name+"."+extendedKeywords.get(i)+">\n");
+      editors[i].readString(_input.substring(begin+extendedKeywords.get(i).length()+name.length()+4,end));
     }
+    //[IAR - FIN]
     setChanged(false);
   }
 
@@ -737,13 +788,15 @@ public class ModelEditor implements Editor {
    * Make sure a given panel is shown
    */
   public void showPanel (String subpanelStr) {
-   for (int i=0; i<keywords.length; i++) {
-      if (keywords[i].equals(subpanelStr)) {
-        cardLayout.show(panel, keywords[i]);
+    //[IAR - INICIO]
+   for (int i=0; i<extendedKeywords.size(); i++) {
+      if (extendedKeywords.get(i).equals(subpanelStr)) {
+        cardLayout.show(panel, extendedKeywords.get(i));
         buttons[i].setSelected(true);
         return;
       }
     }
+   //[IAR - FIN]
   }
 
   /**

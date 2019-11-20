@@ -54,8 +54,10 @@ public abstract class Emulator {
   // Utilities
   //-----------------------------
 
+  //[IAR INICIO]
   protected XMLTransformerJava lintSimulation(Osejs ejs, SimulationXML sim, Element viewSelected, String locale) {
-    XMLTransformerJava transformer = new XMLTransformerJava(ejs, mLibPath,sim,JSObfuscator.Level.OPEN,ejs.getOptions().useFullLibrary());
+    XMLTransformerJava transformer = new XMLTransformerJava(ejs, mLibPath,sim,JSObfuscator.Level.OPEN,ejs.getOptions().separateJSfile(),ejs.getOptions().useFullLibrary());
+  //[IAR FIN]
 
     if (!sim.isViewOnly()) {
       String jsCode = transformer.getJavascriptForEmulator(viewSelected,locale,mLibPath, mHTMLPath);

@@ -14,6 +14,26 @@ import java.net.URL;
 public class ResourceUtil {
   static private Locale myLocale=null;
   static private Hashtable<String,ResourceBundle> resourceTable = new Hashtable<String,ResourceBundle>();
+  // [IAR - INICIO]
+  static private Hashtable<String,Hashtable<String,String>> pluginResourceTable = new Hashtable<String,Hashtable<String,String>>();
+  static public void registerResource(String _table, String _key, String _value) {
+    Hashtable<String,String> resourceTable = pluginResourceTable.get(_table);
+    if (resourceTable == null) {
+      resourceTable = new Hashtable<String,String>();
+      pluginResourceTable.put(_table, resourceTable);
+    }
+    resourceTable.put(_key, _value);
+  }
+  static public String getResource(String _table, String _key) {
+    if (_table == null) return null;
+    if (_key == null) return null;
+    
+    Hashtable<String,String> resourceTable = pluginResourceTable.get(_table);
+    if (resourceTable == null) return null;
+
+    return resourceTable.get(_key);
+  }
+  // [IAR - FIN]
 
   private ResourceBundle resources;
   private String name;
@@ -48,6 +68,12 @@ public class ResourceUtil {
   public boolean isNotAccesible() { return resources==null; }
 
   public String getOptionalString (String _keyword) {
+    // [IAR - INICIO]
+    // Check resources added by plugins first
+    String value = getResource(name, _keyword);
+    if (value != null) return value;
+    // [IAR - FIN]
+    
 //    System.err.println ("Trying "+_keyword);
     if (resources==null) return null;
     try { return resources.getString(_keyword); }
@@ -58,6 +84,12 @@ public class ResourceUtil {
   }
 
   public String getString (String _keyword) {
+    // [IAR - INICIO]
+    // Check resources added by plugins first
+    String value = getResource(name, _keyword);
+    if (value != null) return value;
+    // [IAR - FIN]
+
     if (resources==null) {
       System.err.print  ("Warning! : Can't find resource <" + _keyword + ">. ");
       System.err.println("Resource class <" + name + "> was not initialized!");

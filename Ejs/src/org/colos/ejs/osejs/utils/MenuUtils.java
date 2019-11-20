@@ -14,6 +14,49 @@ public class MenuUtils {
   static private ResourceUtil sysRes = new ResourceUtil ("SystemResources");
 //  static java.awt.Color PANEL_BACKGROUND=javax.swing.UIManager.getColor("Panel.background");
 
+  //[IAR INICIO]
+//  static public JRadioButton createRadioButton (String _key, String _text, String _tooltip, ActionListener _al, boolean _tryShortForms) {
+//    JRadioButton button = new JRadioButton();
+//    
+//    if (_text==null || _text.equals("-")) { button = null; return button; }
+//    button = new JRadioButton (_text);
+//    button.setRequestFocusEnabled(false);
+//    //button.setMargin(new java.awt.Insets(0,3,0,10));
+//    button.setToolTipText(_tooltip);//FKH 021031
+//    button.setActionCommand(_key);
+//    button.addActionListener (_al);
+//
+//    return button;
+//  }
+//
+//  static public JRadioButton[] createRadioButtons (String[] _keys, String _prefix, ActionListener _al, boolean _tryShortForms) {
+//    JRadioButton[] buttons = new JRadioButton[_keys.length];
+//    for (int i=0; i<_keys.length; i++) {
+//      if (_keys[i]==null || _keys[i].equals("-")) { buttons[i] = null; continue; }
+//      String text=null;
+//      if (_tryShortForms) text = res.getOptionalString(_prefix+_keys[i]+".Short");
+//      if (text==null) text = res.getString(_prefix+_keys[i]);
+//      if (text==null) text = _keys[i];
+//      buttons[i] = createRadioButton (_keys[i], text, res.getString(_prefix+_keys[i]+".ToolTip"), _al, _tryShortForms);
+//    }
+//    buttons[0].setSelected (true);
+//    return buttons;
+//  }
+//
+//  static public ButtonGroup createRadioGroup (JRadioButton[] _buttons) {
+//    ButtonGroup group = new ButtonGroup();
+//    if (_buttons == null)
+//      return group;
+//    
+//    for (int i=0; i<_buttons.length; i++) {
+//      group.add(_buttons[i]);
+//    }
+//    _buttons[0].setSelected (true);
+//    return group;
+//  }
+//
+//  @Deprecated
+  //[IAR FIN]
   static public JRadioButton[] createRadioGroup (String[] _keys, String _prefix, ActionListener _al, boolean _tryShortForms) {
     ButtonGroup group = new ButtonGroup();
     JRadioButton[] buttons = new JRadioButton[_keys.length];

@@ -16,8 +16,10 @@ public class LintTool {
   static private final String sBLANK_LINE = "                                                                                                                    ";
   static private final int sBLANK_LINE_LENGTH = sBLANK_LINE.length();
   
+  //[IAR INICIO]
   static public void lintSimulation(Osejs ejs, SimulationXML sim, String viewDesired, String locale, String libPath, String htmlPath) {
-    XMLTransformerJava transformer = new XMLTransformerJava(ejs, libPath,sim,JSObfuscator.Level.OPEN,ejs.getOptions().useFullLibrary());
+    XMLTransformerJava transformer = new XMLTransformerJava(ejs, libPath,sim,JSObfuscator.Level.OPEN,ejs.getOptions().separateJSfile(),ejs.getOptions().useFullLibrary());
+  //[IAR FIN]
 
     Element viewSelected = sim.getViewSelected(viewDesired);
     if (!sim.isViewOnly()) {

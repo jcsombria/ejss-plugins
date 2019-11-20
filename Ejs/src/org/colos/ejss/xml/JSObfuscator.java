@@ -112,7 +112,7 @@ public class JSObfuscator {
   }
     
   private StringBuffer createHeader (String title, java.util.List<String> cssFilenameList, String htmlHead, String libraryPath, String codebasePath, 
-      String scriptsImport, String script) {
+      String pluginScripts, String scriptsImport, String script) {
     StringBuffer buffer = new StringBuffer();
     if (isGenerateXHTML()) buffer.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
     buffer.append("<!DOCTYPE html>\n");
@@ -146,6 +146,7 @@ public class JSObfuscator {
       if (mUseFullLibrary) buffer.append("    <script src=\"file://"+mEjsSLibraryPath+mLibraryVersion+"\"></script>\n");
 //    if (isScorm) buffer.append("    <script src=\""+lPath+sTEXTRESIZEDETECTOR_SCRIPT+"\"></script>\n");
     }
+    if (pluginScripts.length()>0) buffer.append(pluginScripts+"\n");
     if (scriptsImport.length()>0) buffer.append(scriptsImport+"\n");
     if (script!=null) buffer.append(script+"\n");
     buffer.append("  </head>\n");
@@ -163,7 +164,7 @@ public class JSObfuscator {
    * @param localPort 
    *  
    */
-  public String generate(String title, String name, String htmlHead, String scriptsImport, String metadataCode, String modelCode, String viewCode, 
+  public String generate(String title, String name, String htmlHead, String pluginScripts, String scriptsImport, String metadataCode, String modelCode, String viewCode, 
       java.util.List<String> cssFilenameList, String localPort, String libraryPath, String codebasePath) {
     // JS library and Uglifier must have been defined
   if (!mUseFullLibrary) {
@@ -213,7 +214,7 @@ public class JSObfuscator {
   }
 
     // create final HTML
-    StringBuffer buffer = createHeader (title, cssFilenameList, htmlHead, libraryPath, codebasePath, scriptsImport, script);
+    StringBuffer buffer = createHeader (title, cssFilenameList, htmlHead, libraryPath, codebasePath, pluginScripts, scriptsImport, script);
 
 //    if (isScorm) buffer.append("  <body onLoad=\"_scorm_loadPage()\" onbeforeunload=\"_scorm_unloadPage()\">\n");
 //    else 
@@ -253,9 +254,9 @@ public class JSObfuscator {
    * @param cssPath
    * @return
    */
-  protected String generatePlainHTML(String title, String name, String htmlHead, String scriptsImport, String metadataCode, String libraryPath, String codePath, 
+  protected String generatePlainHTML(String title, String name, String htmlHead, String pluginScripts, String scriptsImport, String metadataCode, String libraryPath, String codePath, 
       java.util.List<String> cssFilenameList) {
-    StringBuffer buffer = createHeader (title, cssFilenameList, htmlHead, libraryPath, codePath, scriptsImport, null);
+    StringBuffer buffer = createHeader (title, cssFilenameList, htmlHead, libraryPath, codePath, pluginScripts, scriptsImport, null);
 
 //    if (isScorm) buffer.append("  <body onLoad=\"_scorm_loadPage()\" onbeforeunload=\"_scorm_unloadPage()\">\n");
 //    else 
