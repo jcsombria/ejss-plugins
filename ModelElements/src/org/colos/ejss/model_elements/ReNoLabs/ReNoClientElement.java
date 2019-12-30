@@ -1,6 +1,3 @@
-/**
- * 
- */
 package org.colos.ejss.model_elements.ReNoLabs;
 
 import java.awt.BorderLayout;
@@ -454,12 +451,10 @@ public class ReNoClientElement extends AbstractModelElement {
           
           // Read signals when receiving the response from the server
           socket.on("SignalInfoToClient", new Emitter.Listener() {
-
             @Override
             public void call(Object... args) {
               // Display signals in table
               for (Object o : args) {
-System.out.println(o);
                 try {
                   JSONObject jsonObj = (JSONObject) o;
                   labVariablesTableModel.setRowCount(0);
@@ -477,9 +472,7 @@ System.out.println(o);
                           labVariablesTableModel.addRow(row);
                         }
                       }
-                    }
-                    else
-                    {
+                    } else {
                       System.out.println("No input signals found!");
                     }
                     if (output != null) {
@@ -493,14 +486,10 @@ System.out.println(o);
                           labVariablesTableModel.addRow(row);
                         }
                       }
-                    }
-                    else
-                    {
+                    } else {
                       System.out.println("No output signals found!");
                     }
-                  }
-                  else
-                  {
+                  } else {
                     System.out.println("jsonObj not a JSONObject!");
                   }
                 } catch (JSONException e) {
@@ -551,11 +540,10 @@ System.out.println(o);
                 System.out.println("ERROR: Timeout!");
               }
             }
-          }
-          else
+          } else {
             System.out.println("ERROR: Connection failed!");
-        }
-        catch (Exception ex) {
+          }
+        } catch (Exception ex) {
           ex.printStackTrace();
         }
       }

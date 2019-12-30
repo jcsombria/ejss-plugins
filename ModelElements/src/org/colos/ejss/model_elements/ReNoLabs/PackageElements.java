@@ -9,6 +9,7 @@ public class PackageElements {
   /**
    * Default main for packing the library (invoke main("create_jar"))
    * @param args
+   * @param args
    */
   static public void main(String[] args) {
     String commandLine = 

@@ -322,14 +322,20 @@ public class Palette implements DragSourceListener, DragGestureListener {
    */
   private ArrayList<TwoStrings> readElements (org.colos.ejs.osejs.Osejs _ejse) {
     ArrayList<TwoStrings> groups = new ArrayList<TwoStrings>();
-    String[] bigGroupsList = ResourceUtil.tokenizeString(elRes.getString("Elements"));
-    for (int i=0; i<bigGroupsList.length; i++) {
-      String bigGroupElements = elRes.getString(bigGroupsList[i]);
-      groups.add(new TwoStrings(bigGroupsList[i],bigGroupElements));
+    String[] coreGroupsList = ResourceUtil.tokenizeString(elRes.getString("Elements"));
+    java.util.List<String> bigGroupsList = new ArrayList<String>();
+    for (int i=0; i<coreGroupsList.length; i++) bigGroupsList.add(coreGroupsList[i]);
+    // Add new elements defined in plugins or modify elements overriden by plugins.
+    bigGroupsList.addAll(_ejse.getPluginHtmlElements());
+
+    for (int i=0; i<bigGroupsList.size(); i++) {
+      String bigGroupElements = elRes.getString(bigGroupsList.get(i));
+      groups.add(new TwoStrings(bigGroupsList.get(i),bigGroupElements));
       StringTokenizer tkn = new StringTokenizer(bigGroupElements," \t");
       while (tkn.hasMoreTokens()) {
         String subgroup = tkn.nextToken();
-        groups.add(new TwoStrings(subgroup,elRes.getString(subgroup)));
+        if (subgroup.endsWith(".group"))
+          groups.add(new TwoStrings(subgroup,elRes.getString(subgroup)));
       }
     }
     return groups;
@@ -402,7 +408,9 @@ public class Palette implements DragSourceListener, DragGestureListener {
         String tabHeader = element[i].substring(0,element[i].indexOf('.'));
         String iconName = sysRes.getOptionalString("View.Elements.Groups."+tabHeader+".Icon");
         if (iconName!=null) {
-          Icon groupIcon = ResourceLoader.getIcon(iconName);
+          Icon groupIcon = ejs.getPluginIcon(iconName);
+          if (groupIcon == null)
+              groupIcon = ResourceLoader.getIcon(iconName);
           String toolTipText = res.getOptionalString("View.Elements.Groups."+tabHeader+".ToolTip");
           tabpanel.add (subgroup.component);
           tabpanel.setIconAt(tabpanel.getTabCount()-1,groupIcon);
@@ -599,13 +607,16 @@ public class Palette implements DragSourceListener, DragGestureListener {
         name = sTipsRes.getOptionalString(_elementName+".Name");
         tip  = sTipsRes.getOptionalString(_elementName+".ToolTip");
         icon = sTipsRes.getOptionalString(_elementName+".Icon");
-        if (icon!=null && !icon.startsWith("data/")) icon = "data/icons/Elements/"+icon;
         if (name==null || tip==null || icon==null) {
           System.err.println ("Name not found for "+_elementName);
           return null;
         }
       }
-      Icon theIcon = ResourceLoader.getIcon(icon);
+      Icon theIcon = ejs.getPluginIcon(icon);
+      if (theIcon == null) {
+          if (icon!=null && !icon.startsWith("data/")) icon = "data/icons/Elements/"+icon;
+          theIcon = ResourceLoader.getIcon(icon);
+      }
       JLabel button;
       if (theIcon!=null && theIcon.getIconHeight()>0) {
         button = new JLabel(theIcon);
