@@ -1,0 +1,1 @@
+[{"name":"Users Manager","description":"Organize and manage your lab users within EjsS: \nCreate/Delete users, \nBatch Update, \nModify Permissions","icon":"org/colos/ejss/model_elements/plugins/installer/resources/PluginInstaller.png"}]

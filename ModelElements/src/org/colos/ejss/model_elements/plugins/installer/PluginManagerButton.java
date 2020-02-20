@@ -4,6 +4,8 @@
 package org.colos.ejss.model_elements.plugins.installer;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -21,14 +23,18 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
+import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.ListCellRenderer;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
@@ -46,7 +52,7 @@ import org.colos.ejs.osejs.plugins.PluginRightClickOptionInfo;
  * @author Jesús Chacón Sombría
  *
  */
-public class PluginInstallerButton {
+public class PluginManagerButton {
 
   class PluginTableModel extends DefaultTableModel {
     private final String[] COLUMNS = {"Enabled", "Jar File"};
@@ -67,6 +73,8 @@ public class PluginInstallerButton {
   private static final String PLUGIN_RESTART_EJS = "Plugin %s %s. Please restart EjsS.";
   private static final String PLUGIN_SUCCESFULLY_INSTALLED = "Plugin %s succesfully installed.";
   private static final String PLUGIN_NOT_INSTALLED = "Plugin %s is already installed.";
+  private static final String PLUGIN_SUCCESFULLY_UNINSTALLED = "Plugin %s succesfully uninstalled.";
+  private static final String PLUGIN_NOT_UNINSTALLED = "Cannot uninstall plugin %s.";
   private static final String BUTTON_ICON_NAME = "org/colos/ejss/model_elements/plugins/installer/resources/PluginInstaller.png";
   static private ImageIcon BUTTON_ICON = AbstractModelElement.createImageIcon(BUTTON_ICON_NAME);
   private org.colos.ejs.osejs.Osejs mEjs;
@@ -77,12 +85,12 @@ public class PluginInstallerButton {
   private PluginTableModel pluginTableModel = new PluginTableModel();
   private DefaultListModel<Map<String, Object>> pluginDetailModel = new DefaultListModel<>();
   private JTable pluginTable;
-  private PluginManager pluginManager;
+  private PluginInstaller pluginManager;
   
   /**
    * 
    */
-  public PluginInstallerButton(org.colos.ejs.osejs.Osejs _ejs) {
+   PluginManagerButton(org.colos.ejs.osejs.Osejs _ejs) {
     mEjs = _ejs;
 
     createEditor();
@@ -157,8 +165,7 @@ public class PluginInstallerButton {
     });
 
     // Add Lab
-    JButton addLabButton = new JButton("AddLab");
-    AbstractAction addLab = new AbstractAction("+"){
+    AbstractAction installPlugin = new AbstractAction("+"){
       private static final long serialVersionUID = 1L;
       public void actionPerformed(ActionEvent e) {
         JFileChooser chooser = new JFileChooser();
@@ -178,11 +185,35 @@ public class PluginInstallerButton {
         updatePluginList();
       }
     };
-    addLabButton.setAction(addLab);
+    JButton installButton = new JButton(installPlugin);
+
+    AbstractAction uninstallPlugin = new AbstractAction("-") {
+      private static final long serialVersionUID = 1L;
+      public void actionPerformed(ActionEvent e) {
+        int i = pluginTable.getSelectedRow();
+        if(i < 0 || i >= pluginTableModel.getRowCount()) {
+          String message = "Please, select the plugin you want to uninstall.";
+          JOptionPane.showMessageDialog(null, message, "", JOptionPane.ERROR_MESSAGE);
+        } else {
+          String plugin = (String)pluginTableModel.getValueAt(i, 1);
+          System.out.println(plugin);
+          if(pluginManager.uninstall(plugin)) {
+            String message = String.format(PLUGIN_SUCCESFULLY_UNINSTALLED, plugin);
+            JOptionPane.showMessageDialog(null, message);
+          } else {
+            String message = String.format(PLUGIN_NOT_UNINSTALLED, plugin);
+            JOptionPane.showMessageDialog(null, message);
+          }
+        }
+        updatePluginList();
+      }
+    };
+    JButton uninstallButton = new JButton(uninstallPlugin);
 
     JPanel buttonPanel = new JPanel(new GridLayout(0,1));
     buttonPanel.setBorder(BorderFactory.createEmptyBorder());
-    buttonPanel.add(addLabButton);
+    buttonPanel.add(installButton);
+    buttonPanel.add(uninstallButton);
 
     JPanel actionPanel = new JPanel(new BorderLayout());
     actionPanel.setBorder(BorderFactory.createEmptyBorder());
@@ -205,7 +236,7 @@ public class PluginInstallerButton {
     
     // TO DO: Encapsulate better
     String path = mEjs.getConfigDirectory() + "/CustomPlugins";
-    pluginManager = new PluginManager(new File(path));
+    pluginManager = new PluginInstaller(new File(path));
     updatePluginList();
   }
 
@@ -230,4 +261,31 @@ public class PluginInstallerButton {
     }
   }
 
+}
+
+class PluginInfoRenderer extends JPanel implements ListCellRenderer<Map<String, Object>> {
+
+  @Override
+  public Component getListCellRendererComponent(
+      JList<? extends Map<String, Object>> list,
+          Map<String, Object> info, int index, boolean isSelected,
+          boolean cellHasFocus) {
+
+    String name = (String)info.get("name");
+    String desc = (String)info.get("description");
+    ImageIcon icon = (ImageIcon)info.get("icon");
+
+    setLayout(new BorderLayout());
+
+    JLabel jname = new JLabel(name, icon, JLabel.LEFT);
+    JTextArea jdesc = new JTextArea(desc, 5, 40);
+    jdesc.setLineWrap(true);
+    jdesc.setWrapStyleWord(true);
+    this.removeAll();
+    this.add(jname, BorderLayout.NORTH);
+    this.add(jdesc, BorderLayout.CENTER);
+    this.add(new JSeparator(), BorderLayout.SOUTH);
+    this.setBackground(Color.WHITE);
+    return this;
+  }
 }

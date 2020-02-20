@@ -1,0 +1,1 @@
+[{"name":"Plugin Manager","description":"Organize and manage your plugins within EjsS: \nAdd new plugins, \nUninstall a plugins, \nenable or disable a plugin.","icon":"org/colos/ejss/model_elements/plugins/installer/resources/PluginInstaller.png"}]

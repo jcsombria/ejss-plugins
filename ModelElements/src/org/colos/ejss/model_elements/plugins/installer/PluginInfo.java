@@ -106,16 +106,25 @@ public class PluginInfo {
       String dir = p.substring(0, i);
       String name = p.substring(i+1, p.length()-6);
       String path = String.format("%s/%s_info.js", dir, name);
+      String theName = "", theDescription = "", theIcon = "";
       try {
         InputStream is = jf.getInputStream(jf.getEntry(path));
         JsonReader jsonReader = Json.createReader(is);
         JsonArray array = jsonReader.readArray();
         JsonObject obj = array.getJsonObject(0);
         Map<String, Object> info = new HashMap<>();
-        info.put("name", obj.getString("name"));
-        info.put("description", obj.getString("description"));
-        ImageIcon icon = AbstractModelElement.createImageIcon(obj.getString("icon"));
-        icon = new ImageIcon(icon.getImage().getScaledInstance(24, 24, java.awt.Image.SCALE_SMOOTH));
+        theName = obj.getString("name");
+        theDescription = obj.getString("description");
+        theIcon = obj.getString("icon");
+        info.put("name", theName);
+        info.put("description", theDescription);
+        ImageIcon icon = AbstractModelElement.createImageIcon(theIcon);
+        try {
+          icon = new ImageIcon(icon.getImage().getScaledInstance(24, 24, java.awt.Image.SCALE_SMOOTH));
+        } catch(Exception e) {
+          System.err.println("[WARNING] Cannot load plugin icon.");
+          icon = new ImageIcon();
+        }
         info.put("icon", icon);
         pluginInfoList.add(info);
         jsonReader.close();
@@ -155,5 +164,25 @@ public class PluginInfo {
   @Override
   public String toString() {
     return this.name;
+  }
+  
+  public String getName() {
+    return this.name;
+  }
+  
+  public boolean matchName(String name) {
+    return name.equals(this.name) || name.equals(getDisabledName()) || name.equals(getEnabledName());
+  }
+
+  public String getEnabledName() {
+     return this.name + ".jar";
+  }
+
+  public String getDisabledName() {
+    return this.name + ".jar.disabled";
+ }
+  
+  public String getModifiedName() {
+    return this.name + (this.enabled ? ".jar" : ".jar.disabled");
   }
 }

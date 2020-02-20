@@ -1,103 +1,78 @@
-/**
- * 
- */
 package org.colos.ejss.model_elements.plugins.installer;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Vector;
 
-import javax.swing.ImageIcon;
-import javax.swing.JTextField;
+public class PluginInstaller {
+  private List<PluginInfo> plugins = new ArrayList<>();
+  private File folder;
 
-import org.colos.ejs.osejs.Osejs;
-import org.colos.ejs.osejs.plugins.Plugin;
-import org.colos.ejs.osejs.plugins.PluginButtonInfo;
-import org.colos.ejs.osejs.plugins.PluginMainOptionInfo;
-import org.colos.ejs.osejs.utils.TwoStrings;
-
-/**
- * @author Jesús Chacón Sombría
- *
- */
-public class PluginInstaller implements Plugin {
-  static private List<TwoStrings> resources = new ArrayList<TwoStrings>();
-  static private List<TwoStrings> systemResources = new ArrayList<TwoStrings>();
-  static private List<TwoStrings> elementTips = new ArrayList<TwoStrings>();
-  static private HashMap<String, ImageIcon> iconResources = new HashMap<String, ImageIcon>();
+  PluginInstaller(File folder) {
+    this.folder = folder;
+    this.update();
+  }
   
-  private Osejs ejs;
+  private void update() {
+    File[] files;
+    try {
+      files = folder.listFiles();
+    } catch(SecurityException e) {
+      files = new File[] {};
+      System.err.println(e.getMessage());
+    }
+     plugins.clear();
+     for (File f : files) {
+       try {
+         PluginInfo p = new PluginInfo(f);
+         if (p != null) {
+           plugins.add(p);
+         }
+       } catch(Exception e) {
+       }
+     }
+  }
   
-  protected Vector<PluginButtonInfo> buttons = new Vector<PluginButtonInfo>();
-  protected PluginInstallerButton installerButton = null;
-  private Vector<PluginMainOptionInfo> mainOptions = new Vector<PluginMainOptionInfo>();
-  private Vector<PluginMainOptionInfo> modelOptions = new Vector<PluginMainOptionInfo>();
+  List<PluginInfo> getPluginList() {
+    update();
+    return plugins;
+  }
   
-  public PluginInstaller() {
-    // Initialize class elements
+  public boolean install(File src) {
+    if(find(src.getName()) != null) {
+      return false;
+    }
+    try {
+      File dst = new File(folder.getAbsolutePath() + File.separator + src.getName());
+      dst.createNewFile();
+      Files.copy(src.toPath(), new FileOutputStream(dst));
+      return true;
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return false;
   }
 
-  @Override
-  public void Initialize(Osejs _ejs) {
-    ejs = _ejs;
-    installerButton = new PluginInstallerButton(ejs);
-    buttons.add(installerButton.getButtonInfo());
+  public boolean uninstall(String plugin) {
+    PluginInfo p = find(plugin); 
+    if(p == null) {
+      return false;
+    }
+    String path = folder.getAbsolutePath() + File.separator + p.getModifiedName();
+    System.out.println(path);
+    File dst = new File(path);
+    return dst.delete();
   }
 
-  @Override
-  public Vector<PluginMainOptionInfo> getMainOptions() {
-    return mainOptions;
-  }
-
-  @Override
-  public Vector<PluginMainOptionInfo> getModelOptions() {
-    return modelOptions;
-  }
-
-  @Override
-  public Vector<PluginButtonInfo> getBarButtons() {
-    return buttons;
-  }
-
-  @Override
-  public List<String> getHtmlViewElements() {
+  private PluginInfo find(String name) {
+    for (PluginInfo p : plugins) {
+      if(p.matchName(name)) {
+        return p;
+      }
+    }
     return null;
   }
-
-  @Override
-  public List<TwoStrings> getResources() {
-    return resources;
-  }
-  
-  @Override
-  public List<TwoStrings> getSystemResources() {
-    return systemResources;
-  }
-  
-  @Override
-  public List<TwoStrings> getHtmlViewResources() {
-    return null;
-  }
-  
-  @Override
-  public List<TwoStrings> getElementTips() {
-    return elementTips;
-  }
-  
-  @Override
-  public HashMap<String, ImageIcon> getIconResources() {
-    return iconResources;
-  }
-
-  @Override
-  public String getHtmlViewElementInfo() {
-    return null;
-  }
-  
-  @Override
-  public String getJSScripts() {
-    return "";
-  }
-
 }

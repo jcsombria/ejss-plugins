@@ -1,66 +1,103 @@
+/**
+ * 
+ */
 package org.colos.ejss.model_elements.plugins.installer;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Vector;
 
-public class PluginManager {
-  private List<PluginInfo> plugins = new ArrayList<>();
-  private File folder;
+import javax.swing.ImageIcon;
+import javax.swing.JTextField;
 
-  PluginManager(File folder) {
-    this.folder = folder;
-    this.update();
-  }
+import org.colos.ejs.osejs.Osejs;
+import org.colos.ejs.osejs.plugins.Plugin;
+import org.colos.ejs.osejs.plugins.PluginButtonInfo;
+import org.colos.ejs.osejs.plugins.PluginMainOptionInfo;
+import org.colos.ejs.osejs.utils.TwoStrings;
+
+/**
+ * @author Jesús Chacón Sombría
+ *
+ */
+public class PluginManager implements Plugin {
+  static private List<TwoStrings> resources = new ArrayList<TwoStrings>();
+  static private List<TwoStrings> systemResources = new ArrayList<TwoStrings>();
+  static private List<TwoStrings> elementTips = new ArrayList<TwoStrings>();
+  static private HashMap<String, ImageIcon> iconResources = new HashMap<String, ImageIcon>();
   
-  private void update() {
-    File[] files;
-    try {
-      files = folder.listFiles();
-    } catch(SecurityException e) {
-      files = new File[] {};
-      System.err.println(e.getMessage());
-    }
-     plugins.clear();
-     for (File f : files) {
-       try {
-         PluginInfo p = new PluginInfo(f);
-         if (p != null) {
-           plugins.add(p);
-         }
-       } catch(Exception e) {
-       }
-     }
-  }
+  private Osejs ejs;
   
-  List<PluginInfo> getPluginList() {
-    return plugins;
-  }
+  protected Vector<PluginButtonInfo> buttons = new Vector<PluginButtonInfo>();
+  protected PluginManagerButton installerButton = null;
+  private Vector<PluginMainOptionInfo> mainOptions = new Vector<PluginMainOptionInfo>();
+  private Vector<PluginMainOptionInfo> modelOptions = new Vector<PluginMainOptionInfo>();
   
-  public boolean install(File src) {
-    if(find(src.getName())) {
-      return false;
-    }
-    try {
-      File dst = new File(folder.getAbsolutePath() + File.separator + src.getName());
-      dst.createNewFile();
-      Files.copy(src.toPath(), new FileOutputStream(dst));
-      return true;
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    return false;
+  public PluginManager() {
+    // Initialize class elements
   }
 
-  private boolean find(String name) {
-    for (PluginInfo p : plugins) {
-      if(name.equals(p.name + ".jar")) {
-        return true;
-      }
-    }
-    return false;
+  @Override
+  public void Initialize(Osejs _ejs) {
+    ejs = _ejs;
+    installerButton = new PluginManagerButton(ejs);
+    buttons.add(installerButton.getButtonInfo());
   }
+
+  @Override
+  public Vector<PluginMainOptionInfo> getMainOptions() {
+    return mainOptions;
+  }
+
+  @Override
+  public Vector<PluginMainOptionInfo> getModelOptions() {
+    return modelOptions;
+  }
+
+  @Override
+  public Vector<PluginButtonInfo> getBarButtons() {
+    return buttons;
+  }
+
+  @Override
+  public List<String> getHtmlViewElements() {
+    return null;
+  }
+
+  @Override
+  public List<TwoStrings> getResources() {
+    return resources;
+  }
+  
+  @Override
+  public List<TwoStrings> getSystemResources() {
+    return systemResources;
+  }
+  
+  @Override
+  public List<TwoStrings> getHtmlViewResources() {
+    return null;
+  }
+  
+  @Override
+  public List<TwoStrings> getElementTips() {
+    return elementTips;
+  }
+  
+  @Override
+  public HashMap<String, ImageIcon> getIconResources() {
+    return iconResources;
+  }
+
+  @Override
+  public String getHtmlViewElementInfo() {
+    return null;
+  }
+  
+  @Override
+  public String getJSScripts() {
+    return "";
+  }
+
 }
