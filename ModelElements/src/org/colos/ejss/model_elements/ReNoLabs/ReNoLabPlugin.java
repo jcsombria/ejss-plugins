@@ -234,7 +234,6 @@ public class ReNoLabPlugin implements Plugin {
     resources.add(new TwoStrings("Osejs.Main.Controller", "Controller"));
     resources.add(new TwoStrings("Osejs.Main.Controller.ToolTip", "Remote Controller"));
     resources.add(new TwoStrings("Controller.Color", "0,0,0"));
-
     resources.add(new TwoStrings("Model.ReNoLabModelEditor", "Remote Lab"));
     resources.add(new TwoStrings("Model.ReNoLabModelEditor.ToolTip", "Remote laboratory model editor"));
 
