@@ -24,12 +24,12 @@ public class PackageElements {
       " -s ../ModelElements/src/org/colos/ejss/model_elements/ReNoLabs/lib/socket.io-client-java/okhttp-3.9.1.jar" +
       " -s ../ModelElements/src/org/colos/ejss/model_elements/ReNoLabs/lib/socket.io-client-java/okio-1.13.0.jar" +
       " -s ../ModelElements/src/org/colos/ejss/model_elements/ReNoLabs/lib/socket.io-client-java/animal-sniffer-annotations-1.16.jar" +
-      " -s ../ModelElements/lib/XML-RPC-Request/xmlrpc-common-3.1.3.jar" +
-      " -s ../ModelElements/lib/XML-RPC-Request/xmlrpc-client.jar" +
-      " -s ../ModelElements/lib/XML-RPC-Request/org-apache-ws-commons-util.jar" +
-      " -s ../ModelElements/lib/XML-RPC-Request/org-apache-commons-logging.jar" +
-      " -s ../ModelElements/lib/XML-RPC-Request/xmlrpc-server-3.1-sources.jar" +
-      " -s ../ModelElements/lib/XML-RPC-Request/org.apache.commons.httpclient.jar" +
+//      " -s ../ModelElements/lib/XML-RPC-Request/xmlrpc-common-3.1.3.jar" +
+//      " -s ../ModelElements/lib/XML-RPC-Request/xmlrpc-client.jar" +
+//      " -s ../ModelElements/lib/XML-RPC-Request/org-apache-ws-commons-util.jar" +
+//      " -s ../ModelElements/lib/XML-RPC-Request/org-apache-commons-logging.jar" +
+//      " -s ../ModelElements/lib/XML-RPC-Request/xmlrpc-server-3.1-sources.jar" +
+//      " -s ../ModelElements/lib/XML-RPC-Request/org.apache.commons.httpclient.jar" +
       //" org/apache/++"+
       " -x ../Ejs/distribution/bin/osp.jar -x ../Ejs/distribution/bin/ejs.jar -x ../Ejs/distribution/bin/ejs_lib.jar -x ++Thumbs.db"+ // do not include these classes, nor MAC OS X's _Thumbs.db files
       " org/colos/ejss/model_elements/ReNoLabs/++ "; // get ALL files under this directory and its dependencies (for class files)
